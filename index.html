@@ -21,8 +21,11 @@ body{padding:env(safe-area-inset-top,0) 0 0 0}
 header{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px 16px 8px;max-width:760px;margin:0 auto}
 h1{font-size:1.25rem;margin:0;font-weight:700;letter-spacing:-.01em}
 #today{margin:2px 0 0;color:var(--muted);font-size:.85rem}
-.brand{display:flex;align-items:center;gap:10px;min-width:0}
-#logo{width:46px;height:46px;object-fit:contain;border-radius:8px;background:#fff;border:1px solid var(--line);flex-shrink:0}
+.pager{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 12px}
+.pager[hidden]{display:none}
+.pager span{color:var(--muted);font-size:.9rem}
+.pager button{min-width:96px}
+button:disabled{opacity:.45;cursor:default}
 .pill{font-size:.8rem;padding:5px 10px;border-radius:999px;background:var(--card);border:1px solid var(--line);white-space:nowrap}
 .pill.on{border-color:var(--p);color:var(--p)}
 .pill.off{border-color:var(--l);color:var(--l)}
@@ -71,7 +74,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 .btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 h2{font-size:1rem;margin:0 0 10px}
 p.help{color:var(--muted);font-size:.85rem;margin:6px 0 0}
-nav{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);display:flex;padding-bottom:env(safe-area-inset-bottom,0)}
+nav{position:fixed;z-index:5;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);display:flex;padding-bottom:env(safe-area-inset-bottom,0)}
 nav button{flex:1;border:0;border-radius:0;background:transparent;min-height:56px;font-size:.8rem;color:var(--muted)}
 nav button.on{color:var(--accent);font-weight:700;box-shadow:inset 0 3px 0 var(--accent)}
 #toast{position:fixed;left:50%;bottom:calc(76px + env(safe-area-inset-bottom,0));transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:8px;font-size:.9rem;max-width:90%;display:none;z-index:9}
@@ -104,7 +107,7 @@ table.grid{border-collapse:separate;border-spacing:0;font-size:12px;width:auto;m
 </head>
 <body>
 <header>
-  <div class="brand"><img id="logo" alt="School logo" hidden><div><h1 id="schoolName">Attendance Register</h1><p id="today"></p></div></div>
+  <div><h1>Attendance Register</h1><p id="today"></p></div>
   <div id="pill" class="pill"></div>
 </header>
 
@@ -112,7 +115,6 @@ table.grid{border-collapse:separate;border-spacing:0;font-size:12px;width:auto;m
   <!-- Attendance -->
   <section id="tab-attendance" class="show">
     <div class="card">
-      <label>School<select id="attSchool"></select></label>
       <div class="row">
         <label>Date<input type="date" id="attDate"></label>
         <label>Class<select id="attClass"></select></label>
@@ -129,31 +131,36 @@ table.grid{border-collapse:separate;border-spacing:0;font-size:12px;width:auto;m
 
   <!-- Students -->
   <section id="tab-students">
-    <div class="card">
-      <h2 id="formTitle">Register a student</h2>
-      <label>School<input id="stuSchool" list="schoolList" autocomplete="off" placeholder="e.g. Al-Noor School"></label>
+    <button id="stuAddBtn" class="primary wide" type="button">+ Add student</button>
+    <div class="card" id="stuFormCard" hidden style="margin-top:12px">
+      <h2 id="formTitle">Student Registration</h2>
+      <label>Name<input id="stuName" autocomplete="off"></label>
+      <label>Father<input id="stuGuardian" autocomplete="off"></label>
       <div class="row">
-        <label>Full name<input id="stuName" autocomplete="off"></label>
+        <label>Gender<select id="stuGender"><option value="">Select</option><option>Male</option><option>Female</option></select></label>
         <label>Class<input id="stuClass" list="classList" autocomplete="off" placeholder="e.g. 5-A"></label>
       </div>
       <datalist id="classList"></datalist>
-      <datalist id="schoolList"></datalist>
-      <div class="row">
-        <label>Father / guardian name<input id="stuGuardian" autocomplete="off"></label>
-        <label>Phone<input id="stuPhone" type="tel" autocomplete="off"></label>
-      </div>
-      <div class="row">
-        <label>Roll no. (optional)<input id="stuRoll" autocomplete="off"></label>
-      </div>
+      <label>Roll no. (optional)<input id="stuRoll" autocomplete="off"></label>
       <div class="btns">
         <button id="stuSave" class="primary" type="button">Save student</button>
-        <button id="stuCancel" type="button">Clear form</button>
+        <button id="stuCancel" type="button">Close</button>
       </div>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <label>Class<select id="stuClassFilter"></select></label>
+      <label>Search<input id="stuSearch" type="search" placeholder="Name or father"></label>
+    </div>
+    <p class="help" id="stuCount" style="margin:-4px 0 10px"></p>
+    <div class="card"><ul id="stuList"></ul></div>
+    <div class="pager" id="pager" hidden>
+      <button id="prevPage" type="button">Previous</button>
+      <span id="pageInfo"></span>
+      <button id="nextPage" type="button">Next</button>
     </div>
     <div class="card">
       <h2>Bulk register from Excel</h2>
-      <p class="help" style="margin:0 0 10px">Columns: Name, Class, School, Guardian, Phone, Roll No. Name and Class are required. Works with .xlsx and .csv files.</p>
-      <label>School for rows that have no School value<input id="bulkSchool" list="schoolList" autocomplete="off" placeholder="e.g. Al-Noor School"></label>
+      <p class="help" style="margin:0 0 10px">Columns: Name, Father, Gender, Class, Roll No. Name and Class are required. Works with .xlsx and .csv files.</p>
       <div class="btns">
         <button id="bulkTpl" type="button">Download template</button>
         <button id="bulkPick" class="primary" type="button">Choose file</button>
@@ -161,15 +168,11 @@ table.grid{border-collapse:separate;border-spacing:0;font-size:12px;width:auto;m
       <input id="bulkFile" type="file" accept=".xlsx,.csv,.txt,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden>
       <div id="bulkPreview"></div>
     </div>
-    <label>Search<input id="stuSearch" type="search" placeholder="Name, school, class or phone"></label>
-    <p class="help" id="stuCount" style="margin:-4px 0 10px"></p>
-    <div class="card"><ul id="stuList"></ul></div>
   </section>
 
   <!-- Report -->
   <section id="tab-report">
     <div class="card">
-      <label>School<select id="repSchool"></select></label>
       <div class="row">
         <label>Month<input type="month" id="repMonth"></label>
         <label>Class<select id="repClass"></select></label>
@@ -195,7 +198,7 @@ table.grid{border-collapse:separate;border-spacing:0;font-size:12px;width:auto;m
       </div>
       <label>Reason<input id="holReason" autocomplete="off" placeholder="e.g. Government holiday"></label>
       <button id="holAdd" class="primary wide" type="button">Add holiday</button>
-      <p class="help">Applies to all your schools. You can also mark a day as a holiday from the Attendance tab.</p>
+      <p class="help">Applies to all classes. You can also mark a day as a holiday from the Attendance tab.</p>
     </div>
     <div class="card"><ul id="holList"></ul></div>
   </section>
@@ -211,16 +214,6 @@ table.grid{border-collapse:separate;border-spacing:0;font-size:12px;width:auto;m
       <div style="height:10px"></div>
       <button id="syncNow" class="primary wide" type="button">Sync now</button>
       <p class="help">Everything is saved on this device first. Sync sends it to your Google Sheet whenever internet is available.</p>
-    </div>
-    <div class="card">
-      <h2>Name and logo</h2>
-      <label>Name shown at the top<input id="cfgSchool" autocomplete="off" placeholder="e.g. Your organisation or school name"></label>
-      <label>Logo<input id="cfgLogo" type="file" accept="image/*"></label>
-      <div class="btns">
-        <button id="schoolSave" class="primary" type="button">Save name</button>
-        <button id="logoRemove" type="button">Remove logo</button>
-      </div>
-      <p class="help">Name and logo show at the top of the app and on printed reports.</p>
     </div>
     <div class="card" id="installCard" hidden>
       <h2>Install on this phone</h2>
@@ -285,7 +278,7 @@ function setSet(k, v){
   try { localStorage.setItem(k, v); } catch(e){}
   if (db) { try { store('meta', 'readwrite').put({ k: k, v: v }); } catch(e){} }
 }
-const SETTING_KEYS = ['cfgUrl', 'cfgSecret', 'schoolName', 'schoolLogo', 'lastSync', 'weekOff'];
+const SETTING_KEYS = ['cfgUrl', 'cfgSecret', 'lastSync', 'weekOff'];
 async function loadSettings(){
   const rows = await getAll('meta');
   rows.forEach(r => {
@@ -339,9 +332,9 @@ async function load(){
 }
 const activeStudents = () => students.filter(s => s.active !== false);
 const numSort = (a, b) => a.localeCompare(b, undefined, { numeric: true });
-const schools = () => [...new Set(activeStudents().map(s => s.school || ''))].sort((a, b) => a.localeCompare(b));
-const classesOf = school => [...new Set(activeStudents().filter(s => school === '*' || (s.school || '') === school).map(s => s.cls).filter(Boolean))].sort(numSort);
-const currentList = () => activeStudents().filter(s => (s.school || '') === $('#attSchool').value && s.cls === $('#attClass').value);
+const classes = () => [...new Set(activeStudents().map(s => s.cls).filter(Boolean))].sort(numSort);
+
+const currentList = () => activeStudents().filter(s => s.cls === $('#attClass').value);
 const byName = (a, b) => a.name.localeCompare(b.name);
 
 /* ---------- tabs ---------- */
@@ -368,22 +361,16 @@ function updatePill(){
 
 /* ---------- class selects ---------- */
 function fillClassSelects(){
-  const sc = schools();
-  const aS = $('#attSchool'), aC = $('#attClass'), rS = $('#repSchool'), rC = $('#repClass');
-  const av = aS.value, ac = aC.value, rv = rS.value, rc = rC.value;
+  const cl = classes();
+  const aC = $('#attClass'), rC = $('#repClass'), fC = $('#stuClassFilter');
+  const ac = aC.value, rc = rC.value, fc = fC.value;
   const opt = (v, l) => '<option value="' + esc(v) + '">' + esc(l) + '</option>';
-  aS.innerHTML = sc.length ? sc.map(s => opt(s, s || '(No school)')).join('') : opt('', 'No schools yet');
-  if (sc.includes(av)) aS.value = av;
-  const acl = classesOf(aS.value);
-  aC.innerHTML = acl.length ? acl.map(c => opt(c, c)).join('') : opt('', 'No classes yet');
-  if (acl.includes(ac)) aC.value = ac;
-  rS.innerHTML = opt('*', 'All schools') + sc.map(s => opt(s, s || '(No school)')).join('');
-  if (rv === '*' || sc.includes(rv)) rS.value = rv;
-  const rcl = classesOf(rS.value);
-  rC.innerHTML = opt('', 'All classes') + rcl.map(c => opt(c, c)).join('');
-  if (rcl.includes(rc)) rC.value = rc;
-  $('#classList').innerHTML = classesOf('*').map(c => '<option value="' + esc(c) + '">').join('');
-  $('#schoolList').innerHTML = sc.filter(Boolean).map(s => '<option value="' + esc(s) + '">').join('');
+  aC.innerHTML = cl.length ? cl.map(c => opt(c, c)).join('') : opt('', 'No classes yet');
+  if (cl.includes(ac)) aC.value = ac;
+  const all = opt('', 'All classes') + cl.map(c => opt(c, c)).join('');
+  rC.innerHTML = all; if (cl.includes(rc)) rC.value = rc;
+  fC.innerHTML = all; if (cl.includes(fc)) fC.value = fc;
+  $('#classList').innerHTML = cl.map(c => '<option value="' + esc(c) + '">').join('');
 }
 
 /* ---------- attendance ---------- */
@@ -430,7 +417,6 @@ $('#attList').addEventListener('click', e => {
 });
 $('#attDate').addEventListener('change', () => { loadDraft(); renderAttendance(); });
 $('#attClass').addEventListener('change', () => { loadDraft(); renderAttendance(); });
-$('#attSchool').addEventListener('change', () => { fillClassSelects(); loadDraft(); renderAttendance(); });
 $('#allPresent').addEventListener('click', () => {
   const cls = $('#attClass').value;
   currentList().forEach(s => { draft[s.id] = 'P'; });
@@ -444,61 +430,79 @@ $('#saveAtt').addEventListener('click', async () => {
   let saved = 0;
   for (const s of list){
     const st = draft[s.id]; if (!st) continue;
-    await put('attendance', { key: date + '|' + cls + '|' + s.id, date, cls, studentId: s.id, name: s.name, school: s.school || '', status: st, synced: 0, updated: Date.now() });
+    await put('attendance', { key: date + '|' + cls + '|' + s.id, date, cls, studentId: s.id, name: s.name, status: st, synced: 0, updated: Date.now() });
     saved++;
   }
   await load(); updatePill();
   const un = list.length - saved;
-  toast('Saved ' + saved + ' of ' + list.length + (un ? '. ' + un + ' not marked.' : '.'));
+  const cl = classes(), ci = cl.indexOf(cls), next = (ci >= 0 && ci < cl.length - 1) ? cl[ci + 1] : null;
+  if (next) $('#attClass').value = next;
+  loadDraft(); renderAttendance(); window.scrollTo(0, 0);
+  toast('Saved ' + saved + ' of ' + list.length + (un ? ' (' + un + ' not marked)' : '') + '. ' + (next ? 'Next class: ' + next : 'This was the last class.'));
   autoSync();
 });
 
 /* ---------- students ---------- */
-function clearForm(){
+const PAGE = 20; let stuPage = 0;
+function openForm(){ $('#stuFormCard').hidden = false; $('#stuAddBtn').hidden = true; }
+function closeForm(){
   editingId = null;
-  ['#stuSchool','#stuName','#stuClass','#stuGuardian','#stuPhone','#stuRoll'].forEach(i => { $(i).value = ''; });
-  $('#formTitle').textContent = 'Register a student';
+  ['#stuName', '#stuGuardian', '#stuClass', '#stuRoll'].forEach(i => { $(i).value = ''; });
+  $('#stuGender').value = '';
+  $('#formTitle').textContent = 'Student Registration';
+  $('#stuFormCard').hidden = true; $('#stuAddBtn').hidden = false;
 }
-$('#stuCancel').addEventListener('click', clearForm);
+$('#stuAddBtn').addEventListener('click', () => { openForm(); $('#stuName').focus(); });
+$('#stuCancel').addEventListener('click', closeForm);
 $('#stuSave').addEventListener('click', async () => {
-  const name = $('#stuName').value.trim(), cls = $('#stuClass').value.trim(), school = $('#stuSchool').value.trim();
-  if (!name || !cls || !school){ toast('School, name and class are required.'); return; }
+  const name = $('#stuName').value.trim(), cls = $('#stuClass').value.trim(), gender = $('#stuGender').value;
+  if (!name || !gender || !cls){ toast('Name, gender and class are required.'); return; }
   const old = editingId ? students.find(s => s.id === editingId) : null;
   const rec = {
-    id: old ? old.id : newId(),
-    name, cls, school,
-    guardian: $('#stuGuardian').value.trim(),
-    phone: $('#stuPhone').value.trim(),
-    roll: $('#stuRoll').value.trim(),
-    registered: old ? old.registered : todayStr(),
-    active: true, synced: 0, updated: Date.now()
+    id: old ? old.id : newId(), name, cls, gender,
+    guardian: $('#stuGuardian').value.trim(), roll: $('#stuRoll').value.trim(),
+    phone: old ? (old.phone || '') : '', school: old ? (old.school || '') : '',
+    registered: old ? old.registered : todayStr(), active: true, synced: 0, updated: Date.now()
   };
   await put('students', rec);
-  await load(); clearForm(); fillClassSelects(); renderStudents(); loadDraft(); renderAttendance(); updatePill();
-  toast(old ? 'Student updated.' : 'Student registered.');
+  await load();
+  if (old){ closeForm(); }
+  else { ['#stuName', '#stuGuardian', '#stuRoll'].forEach(i => { $(i).value = ''; }); $('#stuGender').value = ''; $('#stuName').focus(); }
+  fillClassSelects(); renderStudents(); loadDraft(); renderAttendance(); updatePill();
+  toast(old ? 'Student updated.' : 'Student registered. You can add the next one.');
   autoSync();
 });
 function renderStudents(){
-  const q = $('#stuSearch').value.trim().toLowerCase();
-  const all = activeStudents().filter(s => !q || ((s.name || '') + ' ' + (s.school || '') + ' ' + (s.cls || '') + ' ' + (s.phone || '') + ' ' + (s.guardian || '')).toLowerCase().includes(q))
-    .sort((a, b) => (a.school || '').localeCompare(b.school || '') || numSort(a.cls, b.cls) || byName(a, b));
-  const list = all.slice(0, 200);
+  const q = $('#stuSearch').value.trim().toLowerCase(), cf = $('#stuClassFilter').value;
+  const all = activeStudents().filter(s => (!cf || s.cls === cf) && (!q || ((s.name || '') + ' ' + (s.guardian || '')).toLowerCase().includes(q)))
+    .sort((a, b) => numSort(a.cls, b.cls) || byName(a, b));
+  const pages = Math.max(1, Math.ceil(all.length / PAGE));
+  if (stuPage >= pages) stuPage = pages - 1;
+  if (stuPage < 0) stuPage = 0;
+  const list = all.slice(stuPage * PAGE, stuPage * PAGE + PAGE);
   $('#stuCount').textContent = all.length + (all.length === 1 ? ' student' : ' students');
   $('#stuList').innerHTML = list.length ? list.map(s =>
-    '<li class="stu"><div class="nm"><b>' + esc(s.name) + '</b><small>' + esc([s.school, s.cls, s.guardian, s.phone].filter(Boolean).join(', ')) + '</small></div>' +
+    '<li class="stu"><div class="nm"><b>' + esc(s.name) + '</b><small>' + esc([s.cls, s.gender, s.guardian ? 'Father: ' + s.guardian : ''].filter(Boolean).join(', ')) + '</small></div>' +
     '<div class="acts"><button type="button" data-edit="' + esc(s.id) + '">Edit</button><button type="button" class="danger" data-remove="' + esc(s.id) + '">Remove</button></div></li>'
-  ).join('') + (all.length > 200 ? '<li class="empty">Showing the first 200 of ' + all.length + '. Use search to find others.</li>' : '') : '<li class="empty">No students found.</li>';
+  ).join('') : '<li class="empty">No students found.</li>';
+  $('#pager').hidden = pages <= 1;
+  $('#pageInfo').textContent = 'Page ' + (stuPage + 1) + ' of ' + pages;
+  $('#prevPage').disabled = stuPage === 0;
+  $('#nextPage').disabled = stuPage >= pages - 1;
 }
-$('#stuSearch').addEventListener('input', renderStudents);
+$('#stuSearch').addEventListener('input', () => { stuPage = 0; renderStudents(); });
+$('#stuClassFilter').addEventListener('change', () => { stuPage = 0; renderStudents(); });
+$('#prevPage').addEventListener('click', () => { stuPage--; renderStudents(); window.scrollTo(0, 0); });
+$('#nextPage').addEventListener('click', () => { stuPage++; renderStudents(); window.scrollTo(0, 0); });
 $('#stuList').addEventListener('click', async e => {
   const ed = e.target.closest('[data-edit]'), rm = e.target.closest('[data-remove]');
   if (ed){
     const s = students.find(x => x.id === ed.dataset.edit); if (!s) return;
     editingId = s.id;
-    $('#stuSchool').value = s.school || ''; $('#stuName').value = s.name; $('#stuClass').value = s.cls; $('#stuGuardian').value = s.guardian || '';
-    $('#stuPhone').value = s.phone || ''; $('#stuRoll').value = s.roll || '';
+    $('#stuName').value = s.name; $('#stuGuardian').value = s.guardian || ''; $('#stuGender').value = s.gender || '';
+    $('#stuClass').value = s.cls; $('#stuRoll').value = s.roll || '';
     $('#formTitle').textContent = 'Edit student';
-    window.scrollTo(0, 0);
+    openForm(); window.scrollTo(0, 0);
   }
   if (rm){
     const s = students.find(x => x.id === rm.dataset.remove); if (!s) return;
@@ -512,14 +516,14 @@ $('#stuList').addEventListener('click', async e => {
 
 /* ---------- report ---------- */
 function reportRows(){
-  const month = $('#repMonth').value, school = $('#repSchool').value, cls = $('#repClass').value;
+  const month = $('#repMonth').value, cls = $('#repClass').value;
   const days = /^\d{4}-\d{2}$/.test(month) ? monthDays(month) : [];
-  const list = activeStudents().filter(s => (school === '*' || (s.school || '') === school) && (!cls || s.cls === cls));
+  const list = activeStudents().filter(s => !cls || s.cls === cls);
   const ids = new Set(list.map(s => s.id));
   const by = {};
   attendance.forEach(a => { if (a.date.startsWith(month) && ids.has(a.studentId)) (by[a.studentId] = by[a.studentId] || {})[a.date] = a.status; });
   const wd = days.filter(x => x.counted).length;
-  const rows = list.sort((a, b) => (a.school || '').localeCompare(b.school || '') || numSort(a.cls, b.cls) || byName(a, b)).map(s => {
+  const rows = list.sort((a, b) => numSort(a.cls, b.cls) || byName(a, b)).map(s => {
     const rec = by[s.id] || {}; let P = 0, A = 0, L = 0;
     const cells = days.map(x => {
       if (x.off) return '';
@@ -527,22 +531,22 @@ function reportRows(){
       if (st === 'P') P++; else if (st === 'A') A++; else if (st === 'L') L++;
       return st;
     });
-    return { name: s.name, school: s.school || '', cls: s.cls, cells, P, A, L, wd, pct: wd ? Math.min(100, Math.round(P * 100 / wd)) : null };
+    return { name: s.name, cls: s.cls, cells, P, A, L, wd, pct: wd ? Math.min(100, Math.round(P * 100 / wd)) : null };
   });
   return { rows, days, wd, month };
 }
 function renderReport(){
   const { rows, days, wd, month } = reportRows();
-  const box = $('#repBox'), school = $('#repSchool').value, cls = $('#repClass').value;
+  const box = $('#repBox'), cls = $('#repClass').value;
   if (!rows.length){ box.innerHTML = '<div class="empty">No students to report on.</div>'; return; }
-  const title = 'Attendance report, ' + month + (school !== '*' ? ', ' + (school || 'No school') : '') + (cls ? ', class ' + cls : '');
+  const title = 'Attendance report, ' + month + (cls ? ', class ' + cls : '');
   const initials = ['S','M','T','W','T','F','S'];
   const partial = month === todayStr().slice(0, 7);
   let h = '<div class="rh"><h2>' + esc(title) + '</h2><p class="help">Working days: ' + wd + (partial ? ' so far this month' : '') + '. % is present days out of working days. Grey days are holidays or weekly off.</p></div><div class="gridwrap"><table class="grid"><thead><tr><th class="nm">Student</th>' +
     days.map(x => '<th class="' + (x.off ? 'hol' : '') + '">' + x.d + '<small>' + initials[x.dow] + '</small></th>').join('') +
     '<th class="tot first">P</th><th class="tot">A</th><th class="tot">L</th><th class="tot">Days</th><th class="tot">%</th></tr></thead><tbody>';
   rows.forEach(r => {
-    const sub = school === '*' ? [r.school, r.cls].filter(Boolean).join(', ') : (cls ? '' : r.cls);
+    const sub = cls ? '' : r.cls;
     h += '<tr><td class="nm">' + esc(r.name) + (sub ? '<small>' + esc(sub) + '</small>' : '') + '</td>' +
       days.map((x, i) => x.off ? '<td class="hol"' + (x.custom ? ' title="' + esc(x.reason || 'Holiday') + '"' : '') + '>' + (x.custom ? 'H' : '') + '</td>' : '<td class="' + r.cells[i] + '">' + r.cells[i] + '</td>').join('') +
       '<td class="tot first">' + r.P + '</td><td class="tot">' + r.A + '</td><td class="tot">' + r.L + '</td><td class="tot">' + r.wd + '</td><td class="tot ' + (r.pct == null ? '' : r.pct < 75 ? 'low' : 'ok') + '">' + (r.pct == null ? '-' : r.pct + '%') + '</td></tr>';
@@ -551,13 +555,12 @@ function renderReport(){
 }
 $('#repMonth').addEventListener('change', renderReport);
 $('#repClass').addEventListener('change', renderReport);
-$('#repSchool').addEventListener('change', () => { fillClassSelects(); renderReport(); });
 $('#repExport').addEventListener('click', () => {
   const { rows, days, month } = reportRows();
   if (!rows.length){ toast('No students to export.'); return; }
-  const head = ['School', 'Class', 'Name'].concat(days.map(x => x.d), ['Present', 'Absent', 'Leave', 'Working days', 'Percent']);
+  const head = ['Class', 'Name'].concat(days.map(x => x.d), ['Present', 'Absent', 'Leave', 'Working days', 'Percent']);
   csv('attendance-register-' + month + '.csv', [head].concat(rows.map(r =>
-    [r.school, r.cls, r.name].concat(r.cells.map((c, i) => days[i].off ? 'H' : c), [r.P, r.A, r.L, r.wd, r.pct == null ? '' : r.pct]))));
+    [r.cls, r.name].concat(r.cells.map((c, i) => days[i].off ? 'H' : c), [r.P, r.A, r.L, r.wd, r.pct == null ? '' : r.pct]))));
 });
 
 /* ---------- export / backup ---------- */
@@ -569,8 +572,8 @@ function csv(name, rows){
   const q = v => { v = String(v == null ? '' : v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
   download(name, new Blob(['\ufeff' + rows.map(r => r.map(q).join(',')).join('\r\n')], { type: 'text/csv;charset=utf-8' }));
 }
-$('#expStu').addEventListener('click', () => csv('students.csv', [['ID','Name','School','Father/Guardian','Class','Phone','Roll No','Registered','Active']].concat(students.map(s => [s.id, s.name, s.school, s.guardian, s.cls, s.phone, s.roll, s.registered, s.active === false ? 'No' : 'Yes']))));
-$('#expAtt').addEventListener('click', () => csv('attendance.csv', [['Date','School','Class','Student ID','Name','Status']].concat(attendance.slice().sort((a, b) => a.date.localeCompare(b.date) || a.cls.localeCompare(b.cls) || a.name.localeCompare(b.name)).map(a => [a.date, a.school || '', a.cls, a.studentId, a.name, LABEL[a.status]]))));
+$('#expStu').addEventListener('click', () => csv('students.csv', [['ID','Name','Father','Gender','Class','Roll No','Registered','Active']].concat(students.map(s => [s.id, s.name, s.guardian, s.gender || '', s.cls, s.roll, s.registered, s.active === false ? 'No' : 'Yes']))));
+$('#expAtt').addEventListener('click', () => csv('attendance.csv', [['Date','Class','Student ID','Name','Status']].concat(attendance.slice().sort((a, b) => a.date.localeCompare(b.date) || a.cls.localeCompare(b.cls) || a.name.localeCompare(b.name)).map(a => [a.date, a.cls, a.studentId, a.name, LABEL[a.status]]))));
 $('#expJson').addEventListener('click', () => download('attendance-backup-' + todayStr() + '.json', new Blob([JSON.stringify({ students, attendance, holidays })], { type: 'application/json' })));
 $('#impBtn').addEventListener('click', () => $('#impFile').click());
 $('#impFile').addEventListener('change', async e => {
@@ -591,7 +594,7 @@ function renderSync(){
   const p = pending();
   $('#pendStu').textContent = p.stu; $('#pendAtt').textContent = p.att; $('#pendHol').textContent = p.hol;
   const ls = getSet('lastSync'); $('#lastSync').textContent = ls ? new Date(+ls).toLocaleString() : 'Never';
-  $('#cfgState').textContent = getSet('cfgUrl') ? 'Connected. Saved on this phone, you do not need to enter it again.' : 'Not connected yet.'; $('#cfgSchool').value = getSet('schoolName'); $('#cfgUrl').value = getSet('cfgUrl'); $('#cfgSecret').value = getSet('cfgSecret');
+  $('#cfgState').textContent = getSet('cfgUrl') ? 'Connected. Saved on this phone, you do not need to enter it again.' : 'Not connected yet.'; $('#cfgUrl').value = getSet('cfgUrl'); $('#cfgSecret').value = getSet('cfgSecret');
 }
 $('#cfgSave').addEventListener('click', () => {
   setSet('cfgUrl', $('#cfgUrl').value.trim()); setSet('cfgSecret', $('#cfgSecret').value.trim());
@@ -734,11 +737,11 @@ const norm = s => String(s == null ? '' : s).trim().toLowerCase().replace(/\s+/g
 const HEAD = {
   name: ['name','studentname','fullname','student','childname'],
   cls: ['class','grade','classname','classsection','standard','section'],
-  school: ['school','schoolname','branch','campus'],
   guardian: ['guardian','fathername','father','parent','parentname','guardianname','fatherguardian','fatherguardianname'],
-  phone: ['phone','mobile','contact','phoneno','mobileno','contactno','phonenumber','mobilenumber','whatsapp'],
+  gender: ['gender','sex'],
   roll: ['roll','rollno','rollnumber','regno','registrationno','admissionno']
 };
+const normGender = v => { const t = String(v == null ? '' : v).trim().toLowerCase(); return ['m','male','boy'].includes(t) ? 'Male' : ['f','female','girl'].includes(t) ? 'Female' : ''; };
 function parseCSV(text){
   text = text.replace(/^\ufeff/, '');
   const first = text.split(/\r?\n/, 1)[0] || '';
@@ -826,20 +829,17 @@ function mapRows(rows){
   for (let i = hi + 1; i < rows.length; i++){
     const r = rows[i];
     if (!r || r.every(v => String(v == null ? '' : v).trim() === '')) continue;
-    out.push({ name: get(r, 'name'), cls: get(r, 'cls'), school: get(r, 'school'), guardian: get(r, 'guardian'), phone: get(r, 'phone'), roll: get(r, 'roll') });
+    out.push({ name: get(r, 'name'), cls: get(r, 'cls'), guardian: get(r, 'guardian'), gender: normGender(get(r, 'gender')), roll: get(r, 'roll') });
   }
   return out;
 }
-const skey = s => norm(s.school) + '|' + norm(s.cls) + '|' + (s.roll ? 'r:' + norm(s.roll) : 'n:' + norm(s.name) + '|' + norm(s.guardian));
+const skey = s => norm(s.cls) + '|' + (s.roll ? 'r:' + norm(s.roll) : 'n:' + norm(s.name) + '|' + norm(s.guardian));
 let bulk = null;
 function showBulk(fileName, items){
-  const defSchool = $('#bulkSchool').value.trim();
   const existing = new Map(); students.forEach(s => existing.set(skey(s), s));
-  const seen = new Set(), good = []; let missing = 0, noSchool = 0, dup = 0;
+  const seen = new Set(), good = []; let missing = 0, dup = 0;
   items.forEach(it => {
-    if (!it.school) it.school = defSchool;
     if (!it.name || !it.cls){ missing++; return; }
-    if (!it.school){ noSchool++; return; }
     const k = skey(it);
     if (seen.has(k)){ dup++; return; }
     seen.add(k); it.existing = existing.get(k) || null; good.push(it);
@@ -850,11 +850,10 @@ function showBulk(fileName, items){
     '<p>New students: <b>' + (good.length - upd) + '</b></p>' +
     '<p>Already registered (will be updated): <b>' + upd + '</b></p>';
   if (missing) h += '<p style="color:var(--a)">Skipped, name or class missing: ' + missing + '</p>';
-  if (noSchool) h += '<p style="color:var(--a)">Skipped, no school: ' + noSchool + '. Type a school name above and choose the file again.</p>';
   if (dup) h += '<p style="color:var(--a)">Skipped, repeated in the file: ' + dup + '</p>';
   if (good.length){
-    h += '<div class="scroll"><table><thead><tr><th>Name</th><th>Class</th><th>School</th></tr></thead><tbody>' +
-      good.slice(0, 5).map(g => '<tr><td>' + esc(g.name) + '</td><td>' + esc(g.cls) + '</td><td>' + esc(g.school) + '</td></tr>').join('') +
+    h += '<div class="scroll"><table><thead><tr><th>Name</th><th>Class</th><th>Gender</th></tr></thead><tbody>' +
+      good.slice(0, 5).map(g => '<tr><td>' + esc(g.name) + '</td><td>' + esc(g.cls) + '</td><td>' + esc(g.gender) + '</td></tr>').join('') +
       '</tbody></table></div><p class="help">First ' + Math.min(5, good.length) + ' rows shown.</p>' +
       '<div class="btns" style="margin-top:10px"><button class="primary" type="button" data-act="import">Import ' + good.length + '</button><button type="button" data-act="cancel">Cancel</button></div>';
   } else {
@@ -864,9 +863,9 @@ function showBulk(fileName, items){
 }
 $('#bulkPick').addEventListener('click', () => $('#bulkFile').click());
 $('#bulkTpl').addEventListener('click', () => csv('student-template.csv', [
-  ['Name', 'Class', 'School', 'Guardian', 'Phone', 'Roll No'],
-  ['Ali Khan', '5-A', 'Al-Noor School', 'Khan Sahib', '03001234567', '1'],
-  ['Sara Bibi', '5-A', 'Al-Noor School', 'Bibi Sahiba', '03007654321', '2']
+  ['Name', 'Father', 'Gender', 'Class', 'Roll No'],
+  ['Ali Khan', 'Khan Sahib', 'Male', '5-A', '1'],
+  ['Sara Bibi', 'Bibi Sahib', 'Female', '5-A', '2']
 ]));
 $('#bulkFile').addEventListener('change', async e => {
   const f = e.target.files[0]; e.target.value = ''; if (!f) return;
@@ -891,8 +890,8 @@ $('#bulkPreview').addEventListener('click', async e => {
     if (ex) id = ex.id;
     else { do { id = 'S' + Math.random().toString(36).toUpperCase().slice(2, 8); } while (used.has(id)); used.add(id); }
     recs.push({
-      id, name: it.name, cls: it.cls, school: it.school,
-      guardian: it.guardian || (ex && ex.guardian) || '', phone: it.phone || (ex && ex.phone) || '', roll: it.roll || (ex && ex.roll) || '',
+      id, name: it.name, cls: it.cls, guardian: it.guardian || (ex && ex.guardian) || '', gender: it.gender || (ex && ex.gender) || '',
+      roll: it.roll || (ex && ex.roll) || '', phone: (ex && ex.phone) || '', school: (ex && ex.school) || '',
       registered: ex ? ex.registered : todayStr(), active: true, synced: 0, updated: now
     });
   });
@@ -904,28 +903,6 @@ $('#bulkPreview').addEventListener('click', async e => {
   autoSync();
 });
 
-/* ---------- school name and logo ---------- */
-function applySchool(){
-  const name = getSet('schoolName'), logo = getSet('schoolLogo');
-  $('#schoolName').textContent = name || 'Attendance Register';
-  document.title = name ? name + ' - Attendance' : 'Attendance Register';
-  const img = $('#logo');
-  if (logo){ img.src = logo; img.hidden = false; } else { img.hidden = true; img.removeAttribute('src'); }
-}
-$('#schoolSave').addEventListener('click', () => { setSet('schoolName', $('#cfgSchool').value.trim()); applySchool(); toast('Name saved.'); });
-$('#cfgLogo').addEventListener('change', e => {
-  const f = e.target.files[0]; if (!f) return;
-  const img = new Image(), url = URL.createObjectURL(f);
-  img.onload = () => {
-    const k = Math.min(1, 160 / Math.max(img.width, img.height));
-    const c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
-    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-    setSet('schoolLogo', c.toDataURL('image/png')); URL.revokeObjectURL(url); applySchool(); toast('Logo saved.');
-  };
-  img.onerror = () => { URL.revokeObjectURL(url); toast('Could not read this image.'); };
-  img.src = url; e.target.value = '';
-});
-$('#logoRemove').addEventListener('click', () => { setSet('schoolLogo', ''); applySchool(); toast('Logo removed.'); });
 $('#repPrint').addEventListener('click', () => window.print());
 
 /* ---------- install as app ---------- */
@@ -942,12 +919,11 @@ if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) navigat
 function renderAll(){ fillClassSelects(); renderAttendance(); renderStudents(); renderReport(); renderHolidays(); renderSync(); updatePill(); }
 (async function init(){
   $('#today').textContent = new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-  applySchool();
   if (navigator.storage && navigator.storage.persist) { navigator.storage.persist().catch(() => {}); }
   $('#attDate').value = todayStr();
   $('#holDate').value = todayStr();
   $('#repMonth').value = todayStr().slice(0, 7);
-  try { await openDB(); await load(); await loadSettings(); applySchool(); }
+  try { await openDB(); await load(); await loadSettings(); }
   catch(e){ toast('This browser blocked local storage. Open the file in Chrome or Edge.'); return; }
   fillClassSelects(); loadDraft(); renderAll();
   autoSync();
