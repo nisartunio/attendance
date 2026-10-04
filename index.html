@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0E6E7E">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Attendance Register</title>
+<style>
+:root{
+  --bg:#EDF1F4; --card:#FFFFFF; --ink:#12263A; --muted:#5B6B7A; --line:#D5DDE4;
+  --accent:#0E6E7E; --accent-ink:#FFFFFF;
+  --p:#1F8A4C; --a:#C0392B; --l:#B7791F;
+  --p-bg:#E3F3EA; --a-bg:#FBE7E4; --l-bg:#FBF0DA;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans",Arial,sans-serif}
+body{padding:env(safe-area-inset-top,0) 0 0 0}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px 16px 8px;max-width:760px;margin:0 auto}
+h1{font-size:1.25rem;margin:0;font-weight:700;letter-spacing:-.01em}
+#today{margin:2px 0 0;color:var(--muted);font-size:.85rem}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+#logo{width:46px;height:46px;object-fit:contain;border-radius:8px;background:#fff;border:1px solid var(--line);flex-shrink:0}
+.pill{font-size:.8rem;padding:5px 10px;border-radius:999px;background:var(--card);border:1px solid var(--line);white-space:nowrap}
+.pill.on{border-color:var(--p);color:var(--p)}
+.pill.off{border-color:var(--l);color:var(--l)}
+main{max-width:760px;margin:0 auto;padding:8px 16px calc(96px + env(safe-area-inset-bottom,0))}
+section{display:none}
+section.show{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:12px}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row>*{flex:1 1 140px}
+label{display:block;font-size:.85rem;color:var(--muted);margin-bottom:8px}
+input,select{width:100%;font:inherit;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:8px;padding:10px;margin-top:4px;min-height:44px}
+input:focus-visible,select:focus-visible,button:focus-visible{outline:3px solid #7FC4CF;outline-offset:1px}
+button{font:inherit;min-height:44px;border-radius:8px;border:1px solid var(--line);background:#fff;color:var(--ink);padding:8px 14px;cursor:pointer}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+button.wide{width:100%}
+button.ghost{background:transparent}
+button.danger{color:var(--a);border-color:#E7B7B1}
+.bar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:4px 0 10px;font-size:.9rem;color:var(--muted)}
+ul{list-style:none;margin:0;padding:0}
+.stu{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.stu:last-child{border-bottom:0}
+.stu .nm{min-width:0}
+.stu .nm b{display:block;overflow-wrap:anywhere}
+.stu .nm small{color:var(--muted)}
+.marks{display:flex;gap:6px;flex-shrink:0}
+.marks button{min-width:44px;padding:8px 0;font-weight:700}
+.marks button.p.on{background:var(--p);border-color:var(--p);color:#fff}
+.marks button.a.on{background:var(--a);border-color:var(--a);color:#fff}
+.marks button.l.on{background:var(--l);border-color:var(--l);color:#fff}
+.acts{display:flex;gap:6px;flex-shrink:0}
+.acts button{min-height:40px;padding:6px 10px;font-size:.9rem}
+table{width:100%;border-collapse:collapse;font-size:.92rem}
+th,td{padding:8px 6px;text-align:left;border-bottom:1px solid var(--line)}
+th{font-weight:600;color:var(--muted);font-size:.82rem}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+.low{color:var(--a);font-weight:700}
+.ok{color:var(--p);font-weight:700}
+.scroll{overflow-x:auto}
+.empty{color:var(--muted);padding:18px 4px;text-align:center}
+.stat{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line)}
+.stat:last-child{border-bottom:0}
+.btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+h2{font-size:1rem;margin:0 0 10px}
+p.help{color:var(--muted);font-size:.85rem;margin:6px 0 0}
+nav{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);display:flex;padding-bottom:env(safe-area-inset-bottom,0)}
+nav button{flex:1;border:0;border-radius:0;background:transparent;min-height:56px;font-size:.85rem;color:var(--muted)}
+nav button.on{color:var(--accent);font-weight:700;box-shadow:inset 0 3px 0 var(--accent)}
+#toast{position:fixed;left:50%;bottom:calc(76px + env(safe-area-inset-bottom,0));transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:8px;font-size:.9rem;max-width:90%;display:none;z-index:9}
+@media (prefers-reduced-motion:no-preference){#toast.show{animation:pop .15s ease-out}}
+@media print{nav,#toast,#pill,#repExport,#repPrint,#tab-report .card:first-child{display:none!important}body{background:#fff}main{padding:0}section{display:none!important}#tab-report{display:block!important}.card{border:0;padding:0}}
+@keyframes pop{from{opacity:0;transform:translate(-50%,6px)}to{opacity:1;transform:translate(-50%,0)}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand"><img id="logo" alt="School logo" hidden><div><h1 id="schoolName">Attendance Register</h1><p id="today"></p></div></div>
+  <div id="pill" class="pill"></div>
+</header>
+
+<main>
+  <!-- Attendance -->
+  <section id="tab-attendance" class="show">
+    <div class="card">
+      <div class="row">
+        <label>Date<input type="date" id="attDate"></label>
+        <label>Class<select id="attClass"></select></label>
+      </div>
+    </div>
+    <div class="bar"><span id="attSummary"></span><button id="allPresent" class="ghost" type="button">Mark all present</button></div>
+    <div class="card"><ul id="attList"></ul></div>
+    <button id="saveAtt" class="primary wide" type="button">Save attendance</button>
+  </section>
+
+  <!-- Students -->
+  <section id="tab-students">
+    <div class="card">
+      <h2 id="formTitle">Register a student</h2>
+      <div class="row">
+        <label>Full name<input id="stuName" autocomplete="off"></label>
+        <label>Class<input id="stuClass" list="classList" autocomplete="off" placeholder="e.g. 5-A"></label>
+      </div>
+      <datalist id="classList"></datalist>
+      <div class="row">
+        <label>Father / guardian name<input id="stuGuardian" autocomplete="off"></label>
+        <label>Phone<input id="stuPhone" type="tel" autocomplete="off"></label>
+      </div>
+      <div class="row">
+        <label>Roll no. (optional)<input id="stuRoll" autocomplete="off"></label>
+      </div>
+      <div class="btns">
+        <button id="stuSave" class="primary" type="button">Save student</button>
+        <button id="stuCancel" type="button">Clear form</button>
+      </div>
+    </div>
+    <label>Search<input id="stuSearch" type="search" placeholder="Name, class or phone"></label>
+    <div class="card"><ul id="stuList"></ul></div>
+  </section>
+
+  <!-- Report -->
+  <section id="tab-report">
+    <div class="card">
+      <div class="row">
+        <label>Month<input type="month" id="repMonth"></label>
+        <label>Class<select id="repClass"></select></label>
+      </div>
+    </div>
+    <div class="card scroll" id="repBox"></div>
+    <button id="repExport" class="wide" type="button">Download report for Excel</button>
+    <button id="repPrint" class="wide" type="button" style="margin-top:8px">Print report</button>
+  </section>
+
+  <!-- Sync -->
+  <section id="tab-sync">
+    <div class="card">
+      <h2>Waiting to sync</h2>
+      <div class="stat"><span>Students</span><b id="pendStu">0</b></div>
+      <div class="stat"><span>Attendance records</span><b id="pendAtt">0</b></div>
+      <div class="stat"><span>Last sync</span><b id="lastSync">Never</b></div>
+      <div style="height:10px"></div>
+      <button id="syncNow" class="primary wide" type="button">Sync now</button>
+      <p class="help">Everything is saved on this device first. Sync sends it to your Google Sheet whenever internet is available.</p>
+    </div>
+    <div class="card">
+      <h2>School</h2>
+      <label>School name<input id="cfgSchool" autocomplete="off" placeholder="e.g. Al-Noor Public School"></label>
+      <label>Logo<input id="cfgLogo" type="file" accept="image/*"></label>
+      <div class="btns">
+        <button id="schoolSave" class="primary" type="button">Save school</button>
+        <button id="logoRemove" type="button">Remove logo</button>
+      </div>
+      <p class="help">Name and logo show at the top of the app and on printed reports.</p>
+    </div>
+    <div class="card" id="installCard" hidden>
+      <h2>Install on this phone</h2>
+      <button id="installBtn" class="primary wide" type="button">Install app</button>
+    </div>
+    <div class="card">
+      <h2>Google Sheet connection</h2>
+      <label>Web App URL<input id="cfgUrl" inputmode="url" autocomplete="off" placeholder="https://script.google.com/macros/s/.../exec"></label>
+      <label>Passcode<input id="cfgSecret" autocomplete="off" placeholder="Same passcode as in Code.gs"></label>
+      <button id="cfgSave" class="wide" type="button">Save connection</button>
+    </div>
+    <div class="card">
+      <h2>Excel and backup</h2>
+      <div class="btns">
+        <button id="expStu" type="button">Students (CSV)</button>
+        <button id="expAtt" type="button">Attendance (CSV)</button>
+        <button id="expJson" type="button">Full backup</button>
+        <button id="impBtn" type="button">Restore backup</button>
+      </div>
+      <input id="impFile" type="file" accept="application/json,.json" hidden>
+      <p class="help">CSV files open directly in Excel. Take a full backup now and then, because data lives in this browser.</p>
+    </div>
+  </section>
+</main>
+
+<nav id="tabs">
+  <button data-tab="attendance" class="on" type="button">Attendance</button>
+  <button data-tab="students" type="button">Students</button>
+  <button data-tab="report" type="button">Report</button>
+  <button data-tab="sync" type="button">Sync</button>
+</nav>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+'use strict';
+
+/* ---------- helpers ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad = n => String(n).padStart(2, '0');
+const todayStr = () => { const d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
+const newId = () => 'S' + Date.now().toString(36).toUpperCase().slice(-5) + Math.random().toString(36).toUpperCase().slice(2, 4);
+const LABEL = { P: 'Present', A: 'Absent', L: 'Leave' };
+
+let toastTimer;
+function toast(msg){
+  const t = $('#toast'); t.textContent = msg; t.style.display = 'block'; t.classList.remove('show'); void t.offsetWidth; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.style.display = 'none'; }, 3200);
+}
+
+/* settings (localStorage with fallback) */
+const mem = {};
+function getSet(k){ try { return localStorage.getItem(k) || mem[k] || ''; } catch(e){ return mem[k] || ''; } }
+function setSet(k, v){ mem[k] = v; try { localStorage.setItem(k, v); } catch(e){} }
+
+/* ---------- IndexedDB ---------- */
+let db;
+function openDB(){
+  return new Promise((res, rej) => {
+    const r = indexedDB.open('attendance_app', 1);
+    r.onupgradeneeded = () => {
+      const d = r.result;
+      d.createObjectStore('students', { keyPath: 'id' });
+      d.createObjectStore('attendance', { keyPath: 'key' });
+    };
+    r.onsuccess = () => { db = r.result; res(); };
+    r.onerror = () => rej(r.error);
+  });
+}
+const store = (n, m) => db.transaction(n, m || 'readonly').objectStore(n);
+const wrap = r => new Promise((res, rej) => { r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+const getAll = n => wrap(store(n).getAll());
+const put = (n, v) => wrap(store(n, 'readwrite').put(v));
+
+/* ---------- state ---------- */
+let students = [], attendance = [], draft = {}, editingId = null;
+
+async function load(){
+  students = await getAll('students');
+  attendance = await getAll('attendance');
+}
+const activeStudents = () => students.filter(s => s.active !== false);
+const classes = () => [...new Set(activeStudents().map(s => s.cls).filter(Boolean))].sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+const byName = (a, b) => a.name.localeCompare(b.name);
+
+/* ---------- tabs ---------- */
+function showTab(name){
+  document.querySelectorAll('section').forEach(s => s.classList.toggle('show', s.id === 'tab-' + name));
+  document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === name));
+  if (name === 'report') renderReport();
+  if (name === 'sync') renderSync();
+  window.scrollTo(0, 0);
+}
+$('#tabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b) showTab(b.dataset.tab); });
+
+/* ---------- status pill ---------- */
+function pending(){
+  return { stu: students.filter(s => !s.synced).length, att: attendance.filter(a => !a.synced).length };
+}
+function updatePill(){
+  const p = pending(), n = p.stu + p.att, pill = $('#pill');
+  const online = navigator.onLine;
+  pill.className = 'pill ' + (online ? 'on' : 'off');
+  pill.textContent = (online ? 'Online' : 'Offline') + (n ? ', ' + n + ' to sync' : ', all synced');
+}
+
+/* ---------- class selects ---------- */
+function fillClassSelects(){
+  const cl = classes();
+  const a = $('#attClass'), r = $('#repClass');
+  const av = a.value, rv = r.value;
+  a.innerHTML = cl.length ? cl.map(c => '<option>' + esc(c) + '</option>').join('') : '<option value="">No classes yet</option>';
+  r.innerHTML = '<option value="">All classes</option>' + cl.map(c => '<option>' + esc(c) + '</option>').join('');
+  if (cl.includes(av)) a.value = av;
+  if (cl.includes(rv)) r.value = rv;
+  $('#classList').innerHTML = cl.map(c => '<option value="' + esc(c) + '">').join('');
+}
+
+/* ---------- attendance ---------- */
+function loadDraft(){
+  draft = {};
+  const date = $('#attDate').value, cls = $('#attClass').value;
+  attendance.forEach(a => { if (a.date === date && a.cls === cls) draft[a.studentId] = a.status; });
+}
+function renderAttendance(){
+  const cls = $('#attClass').value;
+  const list = activeStudents().filter(s => s.cls === cls).sort(byName);
+  const ul = $('#attList');
+  if (!list.length){
+    ul.innerHTML = '<li class="empty">No students in this class yet. Add them in the Students tab.</li>';
+    $('#attSummary').textContent = '';
+    return;
+  }
+  ul.innerHTML = list.map(s => {
+    const st = draft[s.id];
+    const btn = (k, cl) => '<button type="button" class="' + cl + (st === k ? ' on' : '') + '" data-id="' + esc(s.id) + '" data-s="' + k + '" aria-pressed="' + (st === k) + '" aria-label="' + LABEL[k] + ' for ' + esc(s.name) + '">' + k + '</button>';
+    return '<li class="stu"><div class="nm"><b>' + esc(s.name) + '</b><small>' + esc(s.roll ? 'Roll ' + s.roll : s.id) + '</small></div><div class="marks">' + btn('P','p') + btn('A','a') + btn('L','l') + '</div></li>';
+  }).join('');
+  const c = { P: 0, A: 0, L: 0 }; list.forEach(s => { if (draft[s.id]) c[draft[s.id]]++; });
+  const un = list.length - c.P - c.A - c.L;
+  $('#attSummary').textContent = 'Present ' + c.P + ', Absent ' + c.A + ', Leave ' + c.L + (un ? ', Not marked ' + un : '');
+}
+$('#attList').addEventListener('click', e => {
+  const b = e.target.closest('button[data-id]'); if (!b) return;
+  const id = b.dataset.id, s = b.dataset.s;
+  if (draft[id] === s) delete draft[id]; else draft[id] = s;
+  renderAttendance();
+});
+$('#attDate').addEventListener('change', () => { loadDraft(); renderAttendance(); });
+$('#attClass').addEventListener('change', () => { loadDraft(); renderAttendance(); });
+$('#allPresent').addEventListener('click', () => {
+  const cls = $('#attClass').value;
+  activeStudents().filter(s => s.cls === cls).forEach(s => { draft[s.id] = 'P'; });
+  renderAttendance();
+});
+$('#saveAtt').addEventListener('click', async () => {
+  const date = $('#attDate').value, cls = $('#attClass').value;
+  if (!date || !cls){ toast('Choose a date and a class first.'); return; }
+  const list = activeStudents().filter(s => s.cls === cls);
+  let saved = 0;
+  for (const s of list){
+    const st = draft[s.id]; if (!st) continue;
+    await put('attendance', { key: date + '|' + cls + '|' + s.id, date, cls, studentId: s.id, name: s.name, status: st, synced: 0, updated: Date.now() });
+    saved++;
+  }
+  await load(); updatePill();
+  const un = list.length - saved;
+  toast('Saved ' + saved + ' of ' + list.length + (un ? '. ' + un + ' not marked.' : '.'));
+  autoSync();
+});
+
+/* ---------- students ---------- */
+function clearForm(){
+  editingId = null;
+  ['#stuName','#stuClass','#stuGuardian','#stuPhone','#stuRoll'].forEach(i => { $(i).value = ''; });
+  $('#formTitle').textContent = 'Register a student';
+}
+$('#stuCancel').addEventListener('click', clearForm);
+$('#stuSave').addEventListener('click', async () => {
+  const name = $('#stuName').value.trim(), cls = $('#stuClass').value.trim();
+  if (!name || !cls){ toast('Name and class are required.'); return; }
+  const old = editingId ? students.find(s => s.id === editingId) : null;
+  const rec = {
+    id: old ? old.id : newId(),
+    name, cls,
+    guardian: $('#stuGuardian').value.trim(),
+    phone: $('#stuPhone').value.trim(),
+    roll: $('#stuRoll').value.trim(),
+    registered: old ? old.registered : todayStr(),
+    active: true, synced: 0, updated: Date.now()
+  };
+  await put('students', rec);
+  await load(); clearForm(); fillClassSelects(); renderStudents(); loadDraft(); renderAttendance(); updatePill();
+  toast(old ? 'Student updated.' : 'Student registered.');
+  autoSync();
+});
+function renderStudents(){
+  const q = $('#stuSearch').value.trim().toLowerCase();
+  const list = activeStudents().filter(s => !q || (s.name + ' ' + s.cls + ' ' + s.phone + ' ' + s.guardian).toLowerCase().includes(q))
+    .sort((a, b) => a.cls.localeCompare(b.cls, undefined, { numeric: true }) || byName(a, b));
+  $('#stuList').innerHTML = list.length ? list.map(s =>
+    '<li class="stu"><div class="nm"><b>' + esc(s.name) + '</b><small>' + esc(s.cls) + (s.guardian ? ', ' + esc(s.guardian) : '') + (s.phone ? ', ' + esc(s.phone) : '') + '</small></div>' +
+    '<div class="acts"><button type="button" data-edit="' + esc(s.id) + '">Edit</button><button type="button" class="danger" data-remove="' + esc(s.id) + '">Remove</button></div></li>'
+  ).join('') : '<li class="empty">No students found.</li>';
+}
+$('#stuSearch').addEventListener('input', renderStudents);
+$('#stuList').addEventListener('click', async e => {
+  const ed = e.target.closest('[data-edit]'), rm = e.target.closest('[data-remove]');
+  if (ed){
+    const s = students.find(x => x.id === ed.dataset.edit); if (!s) return;
+    editingId = s.id;
+    $('#stuName').value = s.name; $('#stuClass').value = s.cls; $('#stuGuardian').value = s.guardian || '';
+    $('#stuPhone').value = s.phone || ''; $('#stuRoll').value = s.roll || '';
+    $('#formTitle').textContent = 'Edit student';
+    window.scrollTo(0, 0);
+  }
+  if (rm){
+    const s = students.find(x => x.id === rm.dataset.remove); if (!s) return;
+    if (!confirm('Remove ' + s.name + ' from class lists? Past attendance is kept.')) return;
+    s.active = false; s.synced = 0; s.updated = Date.now();
+    await put('students', s); await load();
+    fillClassSelects(); renderStudents(); loadDraft(); renderAttendance(); updatePill();
+    autoSync();
+  }
+});
+
+/* ---------- report ---------- */
+function reportRows(){
+  const month = $('#repMonth').value, cls = $('#repClass').value;
+  const list = students.filter(s => (s.active !== false) && (!cls || s.cls === cls));
+  const recs = attendance.filter(a => a.date.startsWith(month) && (!cls || a.cls === cls));
+  const m = {};
+  recs.forEach(a => { (m[a.studentId] = m[a.studentId] || { P: 0, A: 0, L: 0 })[a.status]++; });
+  const days = new Set(recs.map(a => a.date)).size;
+  const rows = list.sort((a, b) => a.cls.localeCompare(b.cls, undefined, { numeric: true }) || byName(a, b)).map(s => {
+    const c = m[s.id] || { P: 0, A: 0, L: 0 };
+    const tot = c.P + c.A + c.L;
+    return { name: s.name, cls: s.cls, P: c.P, A: c.A, L: c.L, pct: tot ? Math.round(c.P * 100 / tot) : null };
+  });
+  return { rows, days, month };
+}
+function renderReport(){
+  const { rows, days } = reportRows();
+  const box = $('#repBox'), cls = $('#repClass').value;
+  if (!rows.length){ box.innerHTML = '<div class="empty">No students to report on.</div>'; return; }
+  box.innerHTML = '<h2>Attendance report, ' + esc($('#repMonth').value) + (cls ? ', class ' + esc(cls) : '') + '</h2><p class="help" style="margin:0 0 8px">Days with attendance taken: ' + days + '</p><table><thead><tr><th>Student</th><th class="n">P</th><th class="n">A</th><th class="n">L</th><th class="n">%</th></tr></thead><tbody>' +
+    rows.map(r => '<tr><td>' + esc(r.name) + '<br><small style="color:var(--muted)">' + esc(r.cls) + '</small></td><td class="n">' + r.P + '</td><td class="n">' + r.A + '</td><td class="n">' + r.L + '</td><td class="n ' + (r.pct == null ? '' : r.pct < 75 ? 'low' : 'ok') + '">' + (r.pct == null ? '-' : r.pct + '%') + '</td></tr>').join('') +
+    '</tbody></table>';
+}
+$('#repMonth').addEventListener('change', renderReport);
+$('#repClass').addEventListener('change', renderReport);
+$('#repExport').addEventListener('click', () => {
+  const { rows, month } = reportRows();
+  csv('attendance-report-' + month + '.csv', [['Name','Class','Present','Absent','Leave','Percent']].concat(rows.map(r => [r.name, r.cls, r.P, r.A, r.L, r.pct == null ? '' : r.pct])));
+});
+
+/* ---------- export / backup ---------- */
+function download(name, blob){
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+}
+function csv(name, rows){
+  const q = v => { v = String(v == null ? '' : v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+  download(name, new Blob(['\ufeff' + rows.map(r => r.map(q).join(',')).join('\r\n')], { type: 'text/csv;charset=utf-8' }));
+}
+$('#expStu').addEventListener('click', () => csv('students.csv', [['ID','Name','Father/Guardian','Class','Phone','Roll No','Registered','Active']].concat(students.map(s => [s.id, s.name, s.guardian, s.cls, s.phone, s.roll, s.registered, s.active === false ? 'No' : 'Yes']))));
+$('#expAtt').addEventListener('click', () => csv('attendance.csv', [['Date','Class','Student ID','Name','Status']].concat(attendance.slice().sort((a, b) => a.date.localeCompare(b.date) || a.cls.localeCompare(b.cls) || a.name.localeCompare(b.name)).map(a => [a.date, a.cls, a.studentId, a.name, LABEL[a.status]]))));
+$('#expJson').addEventListener('click', () => download('attendance-backup-' + todayStr() + '.json', new Blob([JSON.stringify({ students, attendance })], { type: 'application/json' })));
+$('#impBtn').addEventListener('click', () => $('#impFile').click());
+$('#impFile').addEventListener('change', async e => {
+  const f = e.target.files[0]; if (!f) return;
+  try {
+    const d = JSON.parse(await f.text());
+    if (!Array.isArray(d.students) || !Array.isArray(d.attendance)) throw new Error('bad file');
+    for (const s of d.students) await put('students', Object.assign({}, s, { synced: 0 }));
+    for (const a of d.attendance) await put('attendance', Object.assign({}, a, { synced: 0 }));
+    await load(); fillClassSelects(); loadDraft(); renderAll(); toast('Backup restored.');
+  } catch(err){ toast('This is not a valid backup file.'); }
+  e.target.value = '';
+});
+
+/* ---------- sync ---------- */
+function renderSync(){
+  const p = pending();
+  $('#pendStu').textContent = p.stu; $('#pendAtt').textContent = p.att;
+  const ls = getSet('lastSync'); $('#lastSync').textContent = ls ? new Date(+ls).toLocaleString() : 'Never';
+  $('#cfgSchool').value = getSet('schoolName'); $('#cfgUrl').value = getSet('cfgUrl'); $('#cfgSecret').value = getSet('cfgSecret');
+}
+$('#cfgSave').addEventListener('click', () => {
+  setSet('cfgUrl', $('#cfgUrl').value.trim()); setSet('cfgSecret', $('#cfgSecret').value.trim());
+  toast('Connection saved.');
+});
+let syncing = false;
+async function syncNow(silent){
+  if (syncing) return;
+  const url = getSet('cfgUrl');
+  if (!url){ if (!silent){ toast('Add your Web App URL first.'); } return; }
+  if (!navigator.onLine){ if (!silent) toast('No internet. Your data is safe on this device.'); return; }
+  const st = students.filter(s => !s.synced), at = attendance.filter(a => !a.synced);
+  if (!st.length && !at.length){ if (!silent) toast('Everything is already synced.'); return; }
+  syncing = true;
+  if (!silent) toast('Syncing...');
+  try {
+    const r = await fetch(url, { method: 'POST', body: JSON.stringify({ secret: getSet('cfgSecret'), students: st, attendance: at }) });
+    const j = await r.json();
+    if (!j.ok) throw new Error(j.error || 'Sync failed');
+    for (const s of st) await put('students', Object.assign({}, s, { synced: 1 }));
+    for (const a of at) await put('attendance', Object.assign({}, a, { synced: 1 }));
+    setSet('lastSync', String(Date.now()));
+    await load(); updatePill(); renderSync();
+    toast('Synced ' + st.length + ' students and ' + at.length + ' attendance records.');
+  } catch(err){
+    if (!silent) toast('Sync failed: ' + (err.message || 'check the URL and passcode') + '.');
+  } finally { syncing = false; }
+}
+function autoSync(){ if (navigator.onLine && getSet('cfgUrl')) syncNow(true); }
+$('#syncNow').addEventListener('click', () => syncNow(false));
+window.addEventListener('online', () => { updatePill(); autoSync(); });
+window.addEventListener('offline', updatePill);
+
+/* ---------- school name and logo ---------- */
+function applySchool(){
+  const name = getSet('schoolName'), logo = getSet('schoolLogo');
+  $('#schoolName').textContent = name || 'Attendance Register';
+  document.title = name ? name + ' - Attendance' : 'Attendance Register';
+  const img = $('#logo');
+  if (logo){ img.src = logo; img.hidden = false; } else { img.hidden = true; img.removeAttribute('src'); }
+}
+$('#schoolSave').addEventListener('click', () => { setSet('schoolName', $('#cfgSchool').value.trim()); applySchool(); toast('School saved.'); });
+$('#cfgLogo').addEventListener('change', e => {
+  const f = e.target.files[0]; if (!f) return;
+  const img = new Image(), url = URL.createObjectURL(f);
+  img.onload = () => {
+    const k = Math.min(1, 160 / Math.max(img.width, img.height));
+    const c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+    setSet('schoolLogo', c.toDataURL('image/png')); URL.revokeObjectURL(url); applySchool(); toast('Logo saved.');
+  };
+  img.onerror = () => { URL.revokeObjectURL(url); toast('Could not read this image.'); };
+  img.src = url; e.target.value = '';
+});
+$('#logoRemove').addEventListener('click', () => { setSet('schoolLogo', ''); applySchool(); toast('Logo removed.'); });
+$('#repPrint').addEventListener('click', () => window.print());
+
+/* ---------- install as app ---------- */
+let deferredInstall;
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredInstall = e; $('#installCard').hidden = false; });
+$('#installBtn').addEventListener('click', async () => {
+  if (!deferredInstall) return;
+  deferredInstall.prompt(); await deferredInstall.userChoice; deferredInstall = null; $('#installCard').hidden = true;
+});
+window.addEventListener('appinstalled', () => { $('#installCard').hidden = true; });
+if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => {});
+
+/* ---------- start ---------- */
+function renderAll(){ fillClassSelects(); renderAttendance(); renderStudents(); renderReport(); renderSync(); updatePill(); }
+(async function init(){
+  $('#today').textContent = new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  applySchool();
+  if (navigator.storage && navigator.storage.persist) { navigator.storage.persist().catch(() => {}); }
+  $('#attDate').value = todayStr();
+  $('#repMonth').value = todayStr().slice(0, 7);
+  try { await openDB(); await load(); }
+  catch(e){ toast('This browser blocked local storage. Open the file in Chrome or Edge.'); return; }
+  fillClassSelects(); loadDraft(); renderAll();
+  autoSync();
+})();
+})();
+</script>
+</body>
+</html>
