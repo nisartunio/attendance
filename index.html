@@ -32,8 +32,12 @@ section.show{display:block}
 .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:12px}
 .row{display:flex;gap:10px;flex-wrap:wrap}
 .row>*{flex:1 1 140px}
-label{display:block;font-size:.85rem;color:var(--muted);margin-bottom:8px}
-input,select{width:100%;font:inherit;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:8px;padding:10px;margin-top:4px;min-height:44px}
+label{display:block;font-size:.88rem;font-weight:600;color:var(--ink);margin-bottom:12px}
+input,select{width:100%;font:inherit;color:var(--ink);background:#EAF4F6;border:2px solid #5F8794;border-radius:10px;padding:10px 12px;margin-top:5px;min-height:48px}
+input::placeholder{color:#6B7C89;opacity:1}
+input:focus,select:focus{background:#fff;border-color:var(--accent);outline:0;box-shadow:0 0 0 4px #BFE3E8}
+input[type=checkbox]{accent-color:var(--accent)}
+input[type=file]{padding:8px 10px;background:#fff;border-style:dashed}
 input:focus-visible,select:focus-visible,button:focus-visible{outline:3px solid #7FC4CF;outline-offset:1px}
 button{font:inherit;min-height:44px;border-radius:8px;border:1px solid var(--line);background:#fff;color:var(--ink);padding:8px 14px;cursor:pointer}
 button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
@@ -68,11 +72,33 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 h2{font-size:1rem;margin:0 0 10px}
 p.help{color:var(--muted);font-size:.85rem;margin:6px 0 0}
 nav{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);display:flex;padding-bottom:env(safe-area-inset-bottom,0)}
-nav button{flex:1;border:0;border-radius:0;background:transparent;min-height:56px;font-size:.85rem;color:var(--muted)}
+nav button{flex:1;border:0;border-radius:0;background:transparent;min-height:56px;font-size:.8rem;color:var(--muted)}
 nav button.on{color:var(--accent);font-weight:700;box-shadow:inset 0 3px 0 var(--accent)}
 #toast{position:fixed;left:50%;bottom:calc(76px + env(safe-area-inset-bottom,0));transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:8px;font-size:.9rem;max-width:90%;display:none;z-index:9}
 @media (prefers-reduced-motion:no-preference){#toast.show{animation:pop .15s ease-out}}
-@media print{nav,#toast,#pill,#repExport,#repPrint,#tab-report .card:first-child{display:none!important}body{background:#fff}main{padding:0}section{display:none!important}#tab-report{display:block!important}.card{border:0;padding:0}}
+@page{size:landscape;margin:10mm}
+@media print{nav,#toast,#pill,#repExport,#repPrint,#tab-report .card:first-child{display:none!important}body{background:#fff}main{padding:0;max-width:none}section{display:none!important}#tab-report{display:block!important}.card{border:0;padding:0}.gridwrap{overflow:visible}table.grid{font-size:10px;min-width:0;width:100%}.grid .nm{position:static}.grid th,.grid td{min-width:0}}
+.imp{border-top:1px solid var(--line);margin-top:12px;padding-top:12px}
+.rh{padding:12px 14px 6px}
+.rh h2{margin:0 0 4px}
+.rh p{margin:0}
+.gridwrap{overflow-x:auto}
+table.grid{border-collapse:separate;border-spacing:0;font-size:12px;width:auto;min-width:max-content}
+.grid th,.grid td{padding:5px 0;text-align:center;border-bottom:1px solid var(--line);min-width:24px;font-weight:400}
+.grid th{background:#F4F7F9;color:var(--muted);font-size:11px;line-height:1.25}
+.grid th small{display:block;font-size:9px}
+.grid .nm{position:sticky;left:0;z-index:1;text-align:left;padding:5px 8px;min-width:108px;max-width:108px;line-height:1.25;overflow-wrap:anywhere;background:#fff;border-right:1px solid var(--border-strong,#9aa9b6)}
+.grid th.nm{background:#F4F7F9}
+.grid .nm small{display:block;color:var(--muted);font-size:10px}
+.grid .hol{background:#EAEEF2;color:var(--muted);font-size:11px}
+.grid .tot{min-width:36px;font-weight:700;border-left:1px solid var(--line)}
+.grid .tot.first{border-left:1px solid #9aa9b6}
+.grid td.P{color:var(--p)}
+.grid td.A{color:var(--a);font-weight:700}
+.grid td.L{color:var(--l);font-weight:700}
+.chk{display:inline-flex;align-items:center;gap:6px;margin:0 14px 8px 0;font-size:.9rem;font-weight:400;color:var(--ink)}
+.chk input{width:22px;height:22px;min-height:0;margin:0;padding:0;border-width:2px}
+.imp p{margin:4px 0}
 @keyframes pop{from{opacity:0;transform:translate(-50%,6px)}to{opacity:1;transform:translate(-50%,0)}}
 </style>
 </head>
@@ -86,25 +112,32 @@ nav button.on{color:var(--accent);font-weight:700;box-shadow:inset 0 3px 0 var(-
   <!-- Attendance -->
   <section id="tab-attendance" class="show">
     <div class="card">
+      <label>School<select id="attSchool"></select></label>
       <div class="row">
         <label>Date<input type="date" id="attDate"></label>
         <label>Class<select id="attClass"></select></label>
       </div>
     </div>
-    <div class="bar"><span id="attSummary"></span><button id="allPresent" class="ghost" type="button">Mark all present</button></div>
-    <div class="card"><ul id="attList"></ul></div>
-    <button id="saveAtt" class="primary wide" type="button">Save attendance</button>
+    <div class="card" id="attOff" hidden></div>
+    <div id="attMain">
+      <div class="bar"><span id="attSummary"></span><button id="allPresent" class="ghost" type="button">Mark all present</button></div>
+      <div class="card"><ul id="attList"></ul></div>
+      <button id="saveAtt" class="primary wide" type="button">Save attendance</button>
+      <button id="markHoliday" class="ghost wide" type="button" style="margin-top:8px">Mark this day as holiday</button>
+    </div>
   </section>
 
   <!-- Students -->
   <section id="tab-students">
     <div class="card">
       <h2 id="formTitle">Register a student</h2>
+      <label>School<input id="stuSchool" list="schoolList" autocomplete="off" placeholder="e.g. Al-Noor School"></label>
       <div class="row">
         <label>Full name<input id="stuName" autocomplete="off"></label>
         <label>Class<input id="stuClass" list="classList" autocomplete="off" placeholder="e.g. 5-A"></label>
       </div>
       <datalist id="classList"></datalist>
+      <datalist id="schoolList"></datalist>
       <div class="row">
         <label>Father / guardian name<input id="stuGuardian" autocomplete="off"></label>
         <label>Phone<input id="stuPhone" type="tel" autocomplete="off"></label>
@@ -117,21 +150,54 @@ nav button.on{color:var(--accent);font-weight:700;box-shadow:inset 0 3px 0 var(-
         <button id="stuCancel" type="button">Clear form</button>
       </div>
     </div>
-    <label>Search<input id="stuSearch" type="search" placeholder="Name, class or phone"></label>
+    <div class="card">
+      <h2>Bulk register from Excel</h2>
+      <p class="help" style="margin:0 0 10px">Columns: Name, Class, School, Guardian, Phone, Roll No. Name and Class are required. Works with .xlsx and .csv files.</p>
+      <label>School for rows that have no School value<input id="bulkSchool" list="schoolList" autocomplete="off" placeholder="e.g. Al-Noor School"></label>
+      <div class="btns">
+        <button id="bulkTpl" type="button">Download template</button>
+        <button id="bulkPick" class="primary" type="button">Choose file</button>
+      </div>
+      <input id="bulkFile" type="file" accept=".xlsx,.csv,.txt,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden>
+      <div id="bulkPreview"></div>
+    </div>
+    <label>Search<input id="stuSearch" type="search" placeholder="Name, school, class or phone"></label>
+    <p class="help" id="stuCount" style="margin:-4px 0 10px"></p>
     <div class="card"><ul id="stuList"></ul></div>
   </section>
 
   <!-- Report -->
   <section id="tab-report">
     <div class="card">
+      <label>School<select id="repSchool"></select></label>
       <div class="row">
         <label>Month<input type="month" id="repMonth"></label>
         <label>Class<select id="repClass"></select></label>
       </div>
     </div>
-    <div class="card scroll" id="repBox"></div>
+    <div class="card" id="repBox" style="padding:0;overflow:hidden"></div>
     <button id="repExport" class="wide" type="button">Download report for Excel</button>
     <button id="repPrint" class="wide" type="button" style="margin-top:8px">Print report</button>
+  </section>
+
+  <!-- Holidays -->
+  <section id="tab-holidays">
+    <div class="card">
+      <h2>Weekly off days</h2>
+      <div id="wkOff"></div>
+      <p class="help">These days are not counted as working days. Saturday and Sunday are off by default.</p>
+    </div>
+    <div class="card">
+      <h2>Add a holiday</h2>
+      <div class="row">
+        <label>From<input type="date" id="holDate"></label>
+        <label>To (optional)<input type="date" id="holTo"></label>
+      </div>
+      <label>Reason<input id="holReason" autocomplete="off" placeholder="e.g. Government holiday"></label>
+      <button id="holAdd" class="primary wide" type="button">Add holiday</button>
+      <p class="help">Applies to all your schools. You can also mark a day as a holiday from the Attendance tab.</p>
+    </div>
+    <div class="card"><ul id="holList"></ul></div>
   </section>
 
   <!-- Sync -->
@@ -140,17 +206,18 @@ nav button.on{color:var(--accent);font-weight:700;box-shadow:inset 0 3px 0 var(-
       <h2>Waiting to sync</h2>
       <div class="stat"><span>Students</span><b id="pendStu">0</b></div>
       <div class="stat"><span>Attendance records</span><b id="pendAtt">0</b></div>
+      <div class="stat"><span>Holidays</span><b id="pendHol">0</b></div>
       <div class="stat"><span>Last sync</span><b id="lastSync">Never</b></div>
       <div style="height:10px"></div>
       <button id="syncNow" class="primary wide" type="button">Sync now</button>
       <p class="help">Everything is saved on this device first. Sync sends it to your Google Sheet whenever internet is available.</p>
     </div>
     <div class="card">
-      <h2>School</h2>
-      <label>School name<input id="cfgSchool" autocomplete="off" placeholder="e.g. Al-Noor Public School"></label>
+      <h2>Name and logo</h2>
+      <label>Name shown at the top<input id="cfgSchool" autocomplete="off" placeholder="e.g. Your organisation or school name"></label>
       <label>Logo<input id="cfgLogo" type="file" accept="image/*"></label>
       <div class="btns">
-        <button id="schoolSave" class="primary" type="button">Save school</button>
+        <button id="schoolSave" class="primary" type="button">Save name</button>
         <button id="logoRemove" type="button">Remove logo</button>
       </div>
       <p class="help">Name and logo show at the top of the app and on printed reports.</p>
@@ -164,6 +231,7 @@ nav button.on{color:var(--accent);font-weight:700;box-shadow:inset 0 3px 0 var(-
       <label>Web App URL<input id="cfgUrl" inputmode="url" autocomplete="off" placeholder="https://script.google.com/macros/s/.../exec"></label>
       <label>Passcode<input id="cfgSecret" autocomplete="off" placeholder="Same passcode as in Code.gs"></label>
       <button id="cfgSave" class="wide" type="button">Save connection</button>
+      <p class="help" id="cfgState"></p>
     </div>
     <div class="card">
       <h2>Excel and backup</h2>
@@ -183,6 +251,7 @@ nav button.on{color:var(--accent);font-weight:700;box-shadow:inset 0 3px 0 var(-
   <button data-tab="attendance" class="on" type="button">Attendance</button>
   <button data-tab="students" type="button">Students</button>
   <button data-tab="report" type="button">Report</button>
+  <button data-tab="holidays" type="button">Holidays</button>
   <button data-tab="sync" type="button">Sync</button>
 </nav>
 <div id="toast" role="status" aria-live="polite"></div>
@@ -207,18 +276,40 @@ function toast(msg){
 
 /* settings (localStorage with fallback) */
 const mem = {};
-function getSet(k){ try { return localStorage.getItem(k) || mem[k] || ''; } catch(e){ return mem[k] || ''; } }
-function setSet(k, v){ mem[k] = v; try { localStorage.setItem(k, v); } catch(e){} }
+function getSet(k){
+  if (mem[k]) return mem[k];
+  try { return localStorage.getItem(k) || ''; } catch(e){ return ''; }
+}
+function setSet(k, v){
+  mem[k] = v;
+  try { localStorage.setItem(k, v); } catch(e){}
+  if (db) { try { store('meta', 'readwrite').put({ k: k, v: v }); } catch(e){} }
+}
+const SETTING_KEYS = ['cfgUrl', 'cfgSecret', 'schoolName', 'schoolLogo', 'lastSync', 'weekOff'];
+async function loadSettings(){
+  const rows = await getAll('meta');
+  rows.forEach(r => {
+    if (!r.v) return;
+    mem[r.k] = r.v;
+    try { if (!localStorage.getItem(r.k)) localStorage.setItem(r.k, r.v); } catch(e){}
+  });
+  SETTING_KEYS.forEach(k => {
+    let v = ''; try { v = localStorage.getItem(k) || ''; } catch(e){}
+    if (v && !rows.some(r => r.k === k && r.v)) put('meta', { k: k, v: v });
+  });
+}
 
 /* ---------- IndexedDB ---------- */
 let db;
 function openDB(){
   return new Promise((res, rej) => {
-    const r = indexedDB.open('attendance_app', 1);
+    const r = indexedDB.open('attendance_app', 3);
     r.onupgradeneeded = () => {
       const d = r.result;
-      d.createObjectStore('students', { keyPath: 'id' });
-      d.createObjectStore('attendance', { keyPath: 'key' });
+      if (!d.objectStoreNames.contains('students')) d.createObjectStore('students', { keyPath: 'id' });
+      if (!d.objectStoreNames.contains('attendance')) d.createObjectStore('attendance', { keyPath: 'key' });
+      if (!d.objectStoreNames.contains('meta')) d.createObjectStore('meta', { keyPath: 'k' });
+      if (!d.objectStoreNames.contains('holidays')) d.createObjectStore('holidays', { keyPath: 'date' });
     };
     r.onsuccess = () => { db = r.result; res(); };
     r.onerror = () => rej(r.error);
@@ -228,16 +319,29 @@ const store = (n, m) => db.transaction(n, m || 'readonly').objectStore(n);
 const wrap = r => new Promise((res, rej) => { r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
 const getAll = n => wrap(store(n).getAll());
 const put = (n, v) => wrap(store(n, 'readwrite').put(v));
+function putMany(name, arr){
+  return new Promise((res, rej) => {
+    const t = db.transaction(name, 'readwrite'), s = t.objectStore(name);
+    arr.forEach(v => s.put(v));
+    t.oncomplete = () => res();
+    t.onerror = () => rej(t.error);
+    t.onabort = () => rej(t.error);
+  });
+}
 
 /* ---------- state ---------- */
-let students = [], attendance = [], draft = {}, editingId = null;
+let students = [], attendance = [], holidays = [], draft = {}, editingId = null;
 
 async function load(){
   students = await getAll('students');
   attendance = await getAll('attendance');
+  holidays = await getAll('holidays');
 }
 const activeStudents = () => students.filter(s => s.active !== false);
-const classes = () => [...new Set(activeStudents().map(s => s.cls).filter(Boolean))].sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+const numSort = (a, b) => a.localeCompare(b, undefined, { numeric: true });
+const schools = () => [...new Set(activeStudents().map(s => s.school || ''))].sort((a, b) => a.localeCompare(b));
+const classesOf = school => [...new Set(activeStudents().filter(s => school === '*' || (s.school || '') === school).map(s => s.cls).filter(Boolean))].sort(numSort);
+const currentList = () => activeStudents().filter(s => (s.school || '') === $('#attSchool').value && s.cls === $('#attClass').value);
 const byName = (a, b) => a.name.localeCompare(b.name);
 
 /* ---------- tabs ---------- */
@@ -245,6 +349,7 @@ function showTab(name){
   document.querySelectorAll('section').forEach(s => s.classList.toggle('show', s.id === 'tab-' + name));
   document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === name));
   if (name === 'report') renderReport();
+  if (name === 'holidays') renderHolidays();
   if (name === 'sync') renderSync();
   window.scrollTo(0, 0);
 }
@@ -252,10 +357,10 @@ $('#tabs').addEventListener('click', e => { const b = e.target.closest('button')
 
 /* ---------- status pill ---------- */
 function pending(){
-  return { stu: students.filter(s => !s.synced).length, att: attendance.filter(a => !a.synced).length };
+  return { stu: students.filter(s => !s.synced).length, att: attendance.filter(a => !a.synced).length, hol: holidays.filter(h => !h.synced).length };
 }
 function updatePill(){
-  const p = pending(), n = p.stu + p.att, pill = $('#pill');
+  const p = pending(), n = p.stu + p.att + p.hol, pill = $('#pill');
   const online = navigator.onLine;
   pill.className = 'pill ' + (online ? 'on' : 'off');
   pill.textContent = (online ? 'Online' : 'Offline') + (n ? ', ' + n + ' to sync' : ', all synced');
@@ -263,14 +368,22 @@ function updatePill(){
 
 /* ---------- class selects ---------- */
 function fillClassSelects(){
-  const cl = classes();
-  const a = $('#attClass'), r = $('#repClass');
-  const av = a.value, rv = r.value;
-  a.innerHTML = cl.length ? cl.map(c => '<option>' + esc(c) + '</option>').join('') : '<option value="">No classes yet</option>';
-  r.innerHTML = '<option value="">All classes</option>' + cl.map(c => '<option>' + esc(c) + '</option>').join('');
-  if (cl.includes(av)) a.value = av;
-  if (cl.includes(rv)) r.value = rv;
-  $('#classList').innerHTML = cl.map(c => '<option value="' + esc(c) + '">').join('');
+  const sc = schools();
+  const aS = $('#attSchool'), aC = $('#attClass'), rS = $('#repSchool'), rC = $('#repClass');
+  const av = aS.value, ac = aC.value, rv = rS.value, rc = rC.value;
+  const opt = (v, l) => '<option value="' + esc(v) + '">' + esc(l) + '</option>';
+  aS.innerHTML = sc.length ? sc.map(s => opt(s, s || '(No school)')).join('') : opt('', 'No schools yet');
+  if (sc.includes(av)) aS.value = av;
+  const acl = classesOf(aS.value);
+  aC.innerHTML = acl.length ? acl.map(c => opt(c, c)).join('') : opt('', 'No classes yet');
+  if (acl.includes(ac)) aC.value = ac;
+  rS.innerHTML = opt('*', 'All schools') + sc.map(s => opt(s, s || '(No school)')).join('');
+  if (rv === '*' || sc.includes(rv)) rS.value = rv;
+  const rcl = classesOf(rS.value);
+  rC.innerHTML = opt('', 'All classes') + rcl.map(c => opt(c, c)).join('');
+  if (rcl.includes(rc)) rC.value = rc;
+  $('#classList').innerHTML = classesOf('*').map(c => '<option value="' + esc(c) + '">').join('');
+  $('#schoolList').innerHTML = sc.filter(Boolean).map(s => '<option value="' + esc(s) + '">').join('');
 }
 
 /* ---------- attendance ---------- */
@@ -280,8 +393,20 @@ function loadDraft(){
   attendance.forEach(a => { if (a.date === date && a.cls === cls) draft[a.studentId] = a.status; });
 }
 function renderAttendance(){
-  const cls = $('#attClass').value;
-  const list = activeStudents().filter(s => s.cls === cls).sort(byName);
+  const info = dayInfo($('#attDate').value);
+  const offBox = $('#attOff'), main = $('#attMain');
+  if (info.off){
+    main.hidden = true; offBox.hidden = false;
+    offBox.innerHTML = '<b>' + esc(info.reason) + '</b><p class="help" style="margin:6px 0 10px">Attendance is not taken on holidays.</p>' +
+      (info.rec ? '<button type="button" data-hol="remove">Remove this holiday</button>' : '<button type="button" data-hol="work">Take attendance on this day anyway</button>');
+    return;
+  }
+  main.hidden = false;
+  if (info.work){
+    offBox.hidden = false;
+    offBox.innerHTML = '<p class="help" style="margin:0 0 8px">This day is normally off, but you marked it as a working day.</p><button type="button" data-hol="remove">Mark as off again</button>';
+  } else { offBox.hidden = true; }
+  const list = currentList().sort(byName);
   const ul = $('#attList');
   if (!list.length){
     ul.innerHTML = '<li class="empty">No students in this class yet. Add them in the Students tab.</li>';
@@ -305,19 +430,21 @@ $('#attList').addEventListener('click', e => {
 });
 $('#attDate').addEventListener('change', () => { loadDraft(); renderAttendance(); });
 $('#attClass').addEventListener('change', () => { loadDraft(); renderAttendance(); });
+$('#attSchool').addEventListener('change', () => { fillClassSelects(); loadDraft(); renderAttendance(); });
 $('#allPresent').addEventListener('click', () => {
   const cls = $('#attClass').value;
-  activeStudents().filter(s => s.cls === cls).forEach(s => { draft[s.id] = 'P'; });
+  currentList().forEach(s => { draft[s.id] = 'P'; });
   renderAttendance();
 });
 $('#saveAtt').addEventListener('click', async () => {
   const date = $('#attDate').value, cls = $('#attClass').value;
   if (!date || !cls){ toast('Choose a date and a class first.'); return; }
-  const list = activeStudents().filter(s => s.cls === cls);
+  if (dayInfo(date).off){ toast('This day is a holiday. Attendance is not taken.'); return; }
+  const list = currentList();
   let saved = 0;
   for (const s of list){
     const st = draft[s.id]; if (!st) continue;
-    await put('attendance', { key: date + '|' + cls + '|' + s.id, date, cls, studentId: s.id, name: s.name, status: st, synced: 0, updated: Date.now() });
+    await put('attendance', { key: date + '|' + cls + '|' + s.id, date, cls, studentId: s.id, name: s.name, school: s.school || '', status: st, synced: 0, updated: Date.now() });
     saved++;
   }
   await load(); updatePill();
@@ -329,17 +456,17 @@ $('#saveAtt').addEventListener('click', async () => {
 /* ---------- students ---------- */
 function clearForm(){
   editingId = null;
-  ['#stuName','#stuClass','#stuGuardian','#stuPhone','#stuRoll'].forEach(i => { $(i).value = ''; });
+  ['#stuSchool','#stuName','#stuClass','#stuGuardian','#stuPhone','#stuRoll'].forEach(i => { $(i).value = ''; });
   $('#formTitle').textContent = 'Register a student';
 }
 $('#stuCancel').addEventListener('click', clearForm);
 $('#stuSave').addEventListener('click', async () => {
-  const name = $('#stuName').value.trim(), cls = $('#stuClass').value.trim();
-  if (!name || !cls){ toast('Name and class are required.'); return; }
+  const name = $('#stuName').value.trim(), cls = $('#stuClass').value.trim(), school = $('#stuSchool').value.trim();
+  if (!name || !cls || !school){ toast('School, name and class are required.'); return; }
   const old = editingId ? students.find(s => s.id === editingId) : null;
   const rec = {
     id: old ? old.id : newId(),
-    name, cls,
+    name, cls, school,
     guardian: $('#stuGuardian').value.trim(),
     phone: $('#stuPhone').value.trim(),
     roll: $('#stuRoll').value.trim(),
@@ -353,12 +480,14 @@ $('#stuSave').addEventListener('click', async () => {
 });
 function renderStudents(){
   const q = $('#stuSearch').value.trim().toLowerCase();
-  const list = activeStudents().filter(s => !q || (s.name + ' ' + s.cls + ' ' + s.phone + ' ' + s.guardian).toLowerCase().includes(q))
-    .sort((a, b) => a.cls.localeCompare(b.cls, undefined, { numeric: true }) || byName(a, b));
+  const all = activeStudents().filter(s => !q || ((s.name || '') + ' ' + (s.school || '') + ' ' + (s.cls || '') + ' ' + (s.phone || '') + ' ' + (s.guardian || '')).toLowerCase().includes(q))
+    .sort((a, b) => (a.school || '').localeCompare(b.school || '') || numSort(a.cls, b.cls) || byName(a, b));
+  const list = all.slice(0, 200);
+  $('#stuCount').textContent = all.length + (all.length === 1 ? ' student' : ' students');
   $('#stuList').innerHTML = list.length ? list.map(s =>
-    '<li class="stu"><div class="nm"><b>' + esc(s.name) + '</b><small>' + esc(s.cls) + (s.guardian ? ', ' + esc(s.guardian) : '') + (s.phone ? ', ' + esc(s.phone) : '') + '</small></div>' +
+    '<li class="stu"><div class="nm"><b>' + esc(s.name) + '</b><small>' + esc([s.school, s.cls, s.guardian, s.phone].filter(Boolean).join(', ')) + '</small></div>' +
     '<div class="acts"><button type="button" data-edit="' + esc(s.id) + '">Edit</button><button type="button" class="danger" data-remove="' + esc(s.id) + '">Remove</button></div></li>'
-  ).join('') : '<li class="empty">No students found.</li>';
+  ).join('') + (all.length > 200 ? '<li class="empty">Showing the first 200 of ' + all.length + '. Use search to find others.</li>' : '') : '<li class="empty">No students found.</li>';
 }
 $('#stuSearch').addEventListener('input', renderStudents);
 $('#stuList').addEventListener('click', async e => {
@@ -366,7 +495,7 @@ $('#stuList').addEventListener('click', async e => {
   if (ed){
     const s = students.find(x => x.id === ed.dataset.edit); if (!s) return;
     editingId = s.id;
-    $('#stuName').value = s.name; $('#stuClass').value = s.cls; $('#stuGuardian').value = s.guardian || '';
+    $('#stuSchool').value = s.school || ''; $('#stuName').value = s.name; $('#stuClass').value = s.cls; $('#stuGuardian').value = s.guardian || '';
     $('#stuPhone').value = s.phone || ''; $('#stuRoll').value = s.roll || '';
     $('#formTitle').textContent = 'Edit student';
     window.scrollTo(0, 0);
@@ -383,32 +512,52 @@ $('#stuList').addEventListener('click', async e => {
 
 /* ---------- report ---------- */
 function reportRows(){
-  const month = $('#repMonth').value, cls = $('#repClass').value;
-  const list = students.filter(s => (s.active !== false) && (!cls || s.cls === cls));
-  const recs = attendance.filter(a => a.date.startsWith(month) && (!cls || a.cls === cls));
-  const m = {};
-  recs.forEach(a => { (m[a.studentId] = m[a.studentId] || { P: 0, A: 0, L: 0 })[a.status]++; });
-  const days = new Set(recs.map(a => a.date)).size;
-  const rows = list.sort((a, b) => a.cls.localeCompare(b.cls, undefined, { numeric: true }) || byName(a, b)).map(s => {
-    const c = m[s.id] || { P: 0, A: 0, L: 0 };
-    const tot = c.P + c.A + c.L;
-    return { name: s.name, cls: s.cls, P: c.P, A: c.A, L: c.L, pct: tot ? Math.round(c.P * 100 / tot) : null };
+  const month = $('#repMonth').value, school = $('#repSchool').value, cls = $('#repClass').value;
+  const days = /^\d{4}-\d{2}$/.test(month) ? monthDays(month) : [];
+  const list = activeStudents().filter(s => (school === '*' || (s.school || '') === school) && (!cls || s.cls === cls));
+  const ids = new Set(list.map(s => s.id));
+  const by = {};
+  attendance.forEach(a => { if (a.date.startsWith(month) && ids.has(a.studentId)) (by[a.studentId] = by[a.studentId] || {})[a.date] = a.status; });
+  const wd = days.filter(x => x.counted).length;
+  const rows = list.sort((a, b) => (a.school || '').localeCompare(b.school || '') || numSort(a.cls, b.cls) || byName(a, b)).map(s => {
+    const rec = by[s.id] || {}; let P = 0, A = 0, L = 0;
+    const cells = days.map(x => {
+      if (x.off) return '';
+      const st = rec[x.ds] || '';
+      if (st === 'P') P++; else if (st === 'A') A++; else if (st === 'L') L++;
+      return st;
+    });
+    return { name: s.name, school: s.school || '', cls: s.cls, cells, P, A, L, wd, pct: wd ? Math.min(100, Math.round(P * 100 / wd)) : null };
   });
-  return { rows, days, month };
+  return { rows, days, wd, month };
 }
 function renderReport(){
-  const { rows, days } = reportRows();
-  const box = $('#repBox'), cls = $('#repClass').value;
+  const { rows, days, wd, month } = reportRows();
+  const box = $('#repBox'), school = $('#repSchool').value, cls = $('#repClass').value;
   if (!rows.length){ box.innerHTML = '<div class="empty">No students to report on.</div>'; return; }
-  box.innerHTML = '<h2>Attendance report, ' + esc($('#repMonth').value) + (cls ? ', class ' + esc(cls) : '') + '</h2><p class="help" style="margin:0 0 8px">Days with attendance taken: ' + days + '</p><table><thead><tr><th>Student</th><th class="n">P</th><th class="n">A</th><th class="n">L</th><th class="n">%</th></tr></thead><tbody>' +
-    rows.map(r => '<tr><td>' + esc(r.name) + '<br><small style="color:var(--muted)">' + esc(r.cls) + '</small></td><td class="n">' + r.P + '</td><td class="n">' + r.A + '</td><td class="n">' + r.L + '</td><td class="n ' + (r.pct == null ? '' : r.pct < 75 ? 'low' : 'ok') + '">' + (r.pct == null ? '-' : r.pct + '%') + '</td></tr>').join('') +
-    '</tbody></table>';
+  const title = 'Attendance report, ' + month + (school !== '*' ? ', ' + (school || 'No school') : '') + (cls ? ', class ' + cls : '');
+  const initials = ['S','M','T','W','T','F','S'];
+  const partial = month === todayStr().slice(0, 7);
+  let h = '<div class="rh"><h2>' + esc(title) + '</h2><p class="help">Working days: ' + wd + (partial ? ' so far this month' : '') + '. % is present days out of working days. Grey days are holidays or weekly off.</p></div><div class="gridwrap"><table class="grid"><thead><tr><th class="nm">Student</th>' +
+    days.map(x => '<th class="' + (x.off ? 'hol' : '') + '">' + x.d + '<small>' + initials[x.dow] + '</small></th>').join('') +
+    '<th class="tot first">P</th><th class="tot">A</th><th class="tot">L</th><th class="tot">Days</th><th class="tot">%</th></tr></thead><tbody>';
+  rows.forEach(r => {
+    const sub = school === '*' ? [r.school, r.cls].filter(Boolean).join(', ') : (cls ? '' : r.cls);
+    h += '<tr><td class="nm">' + esc(r.name) + (sub ? '<small>' + esc(sub) + '</small>' : '') + '</td>' +
+      days.map((x, i) => x.off ? '<td class="hol"' + (x.custom ? ' title="' + esc(x.reason || 'Holiday') + '"' : '') + '>' + (x.custom ? 'H' : '') + '</td>' : '<td class="' + r.cells[i] + '">' + r.cells[i] + '</td>').join('') +
+      '<td class="tot first">' + r.P + '</td><td class="tot">' + r.A + '</td><td class="tot">' + r.L + '</td><td class="tot">' + r.wd + '</td><td class="tot ' + (r.pct == null ? '' : r.pct < 75 ? 'low' : 'ok') + '">' + (r.pct == null ? '-' : r.pct + '%') + '</td></tr>';
+  });
+  box.innerHTML = h + '</tbody></table></div>';
 }
 $('#repMonth').addEventListener('change', renderReport);
 $('#repClass').addEventListener('change', renderReport);
+$('#repSchool').addEventListener('change', () => { fillClassSelects(); renderReport(); });
 $('#repExport').addEventListener('click', () => {
-  const { rows, month } = reportRows();
-  csv('attendance-report-' + month + '.csv', [['Name','Class','Present','Absent','Leave','Percent']].concat(rows.map(r => [r.name, r.cls, r.P, r.A, r.L, r.pct == null ? '' : r.pct])));
+  const { rows, days, month } = reportRows();
+  if (!rows.length){ toast('No students to export.'); return; }
+  const head = ['School', 'Class', 'Name'].concat(days.map(x => x.d), ['Present', 'Absent', 'Leave', 'Working days', 'Percent']);
+  csv('attendance-register-' + month + '.csv', [head].concat(rows.map(r =>
+    [r.school, r.cls, r.name].concat(r.cells.map((c, i) => days[i].off ? 'H' : c), [r.P, r.A, r.L, r.wd, r.pct == null ? '' : r.pct]))));
 });
 
 /* ---------- export / backup ---------- */
@@ -420,9 +569,9 @@ function csv(name, rows){
   const q = v => { v = String(v == null ? '' : v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
   download(name, new Blob(['\ufeff' + rows.map(r => r.map(q).join(',')).join('\r\n')], { type: 'text/csv;charset=utf-8' }));
 }
-$('#expStu').addEventListener('click', () => csv('students.csv', [['ID','Name','Father/Guardian','Class','Phone','Roll No','Registered','Active']].concat(students.map(s => [s.id, s.name, s.guardian, s.cls, s.phone, s.roll, s.registered, s.active === false ? 'No' : 'Yes']))));
-$('#expAtt').addEventListener('click', () => csv('attendance.csv', [['Date','Class','Student ID','Name','Status']].concat(attendance.slice().sort((a, b) => a.date.localeCompare(b.date) || a.cls.localeCompare(b.cls) || a.name.localeCompare(b.name)).map(a => [a.date, a.cls, a.studentId, a.name, LABEL[a.status]]))));
-$('#expJson').addEventListener('click', () => download('attendance-backup-' + todayStr() + '.json', new Blob([JSON.stringify({ students, attendance })], { type: 'application/json' })));
+$('#expStu').addEventListener('click', () => csv('students.csv', [['ID','Name','School','Father/Guardian','Class','Phone','Roll No','Registered','Active']].concat(students.map(s => [s.id, s.name, s.school, s.guardian, s.cls, s.phone, s.roll, s.registered, s.active === false ? 'No' : 'Yes']))));
+$('#expAtt').addEventListener('click', () => csv('attendance.csv', [['Date','School','Class','Student ID','Name','Status']].concat(attendance.slice().sort((a, b) => a.date.localeCompare(b.date) || a.cls.localeCompare(b.cls) || a.name.localeCompare(b.name)).map(a => [a.date, a.school || '', a.cls, a.studentId, a.name, LABEL[a.status]]))));
+$('#expJson').addEventListener('click', () => download('attendance-backup-' + todayStr() + '.json', new Blob([JSON.stringify({ students, attendance, holidays })], { type: 'application/json' })));
 $('#impBtn').addEventListener('click', () => $('#impFile').click());
 $('#impFile').addEventListener('change', async e => {
   const f = e.target.files[0]; if (!f) return;
@@ -431,6 +580,7 @@ $('#impFile').addEventListener('change', async e => {
     if (!Array.isArray(d.students) || !Array.isArray(d.attendance)) throw new Error('bad file');
     for (const s of d.students) await put('students', Object.assign({}, s, { synced: 0 }));
     for (const a of d.attendance) await put('attendance', Object.assign({}, a, { synced: 0 }));
+    if (Array.isArray(d.holidays)) for (const h of d.holidays) await put('holidays', Object.assign({}, h, { synced: 0 }));
     await load(); fillClassSelects(); loadDraft(); renderAll(); toast('Backup restored.');
   } catch(err){ toast('This is not a valid backup file.'); }
   e.target.value = '';
@@ -439,41 +589,320 @@ $('#impFile').addEventListener('change', async e => {
 /* ---------- sync ---------- */
 function renderSync(){
   const p = pending();
-  $('#pendStu').textContent = p.stu; $('#pendAtt').textContent = p.att;
+  $('#pendStu').textContent = p.stu; $('#pendAtt').textContent = p.att; $('#pendHol').textContent = p.hol;
   const ls = getSet('lastSync'); $('#lastSync').textContent = ls ? new Date(+ls).toLocaleString() : 'Never';
-  $('#cfgSchool').value = getSet('schoolName'); $('#cfgUrl').value = getSet('cfgUrl'); $('#cfgSecret').value = getSet('cfgSecret');
+  $('#cfgState').textContent = getSet('cfgUrl') ? 'Connected. Saved on this phone, you do not need to enter it again.' : 'Not connected yet.'; $('#cfgSchool').value = getSet('schoolName'); $('#cfgUrl').value = getSet('cfgUrl'); $('#cfgSecret').value = getSet('cfgSecret');
 }
 $('#cfgSave').addEventListener('click', () => {
   setSet('cfgUrl', $('#cfgUrl').value.trim()); setSet('cfgSecret', $('#cfgSecret').value.trim());
-  toast('Connection saved.');
+  renderSync(); toast('Connection saved.');
 });
 let syncing = false;
+async function send(url, body){
+  const r = await fetch(url, { method: 'POST', body: JSON.stringify(Object.assign({ secret: getSet('cfgSecret') }, body)) });
+  const j = await r.json();
+  if (!j.ok) throw new Error(j.error || 'Sync failed');
+  return j;
+}
 async function syncNow(silent){
   if (syncing) return;
   const url = getSet('cfgUrl');
   if (!url){ if (!silent){ toast('Add your Web App URL first.'); } return; }
   if (!navigator.onLine){ if (!silent) toast('No internet. Your data is safe on this device.'); return; }
-  const st = students.filter(s => !s.synced), at = attendance.filter(a => !a.synced);
-  if (!st.length && !at.length){ if (!silent) toast('Everything is already synced.'); return; }
+  const st = students.filter(s => !s.synced), at = attendance.filter(a => !a.synced), ho = holidays.filter(h => !h.synced);
+  if (!st.length && !at.length && !ho.length){ if (!silent) toast('Everything is already synced.'); return; }
   syncing = true;
-  if (!silent) toast('Syncing...');
+  const CH = 300, total = st.length + at.length + ho.length; let done = 0;
   try {
-    const r = await fetch(url, { method: 'POST', body: JSON.stringify({ secret: getSet('cfgSecret'), students: st, attendance: at }) });
-    const j = await r.json();
-    if (!j.ok) throw new Error(j.error || 'Sync failed');
-    for (const s of st) await put('students', Object.assign({}, s, { synced: 1 }));
-    for (const a of at) await put('attendance', Object.assign({}, a, { synced: 1 }));
+    if (ho.length){
+      await send(url, { students: [], attendance: [], holidays: ho });
+      await putMany('holidays', ho.map(h => Object.assign({}, h, { synced: 1 })));
+      done += ho.length;
+    }
+    for (let i = 0; i < st.length; i += CH){
+      const part = st.slice(i, i + CH);
+      await send(url, { students: part, attendance: [] });
+      await putMany('students', part.map(s => Object.assign({}, s, { synced: 1 })));
+      done += part.length; if (!silent) toast('Syncing ' + done + ' of ' + total + '...');
+    }
+    for (let i = 0; i < at.length; i += CH){
+      const part = at.slice(i, i + CH);
+      await send(url, { students: [], attendance: part });
+      await putMany('attendance', part.map(a => Object.assign({}, a, { synced: 1 })));
+      done += part.length; if (!silent) toast('Syncing ' + done + ' of ' + total + '...');
+    }
     setSet('lastSync', String(Date.now()));
     await load(); updatePill(); renderSync();
-    toast('Synced ' + st.length + ' students and ' + at.length + ' attendance records.');
+    toast('Synced ' + st.length + ' students, ' + at.length + ' attendance records and ' + ho.length + ' holidays.');
   } catch(err){
-    if (!silent) toast('Sync failed: ' + (err.message || 'check the URL and passcode') + '.');
+    await load(); updatePill(); renderSync();
+    if (!silent) toast('Sync failed: ' + (err.message || 'check the URL and passcode') + '. What was sent is already saved.');
   } finally { syncing = false; }
 }
 function autoSync(){ if (navigator.onLine && getSet('cfgUrl')) syncNow(true); }
 $('#syncNow').addEventListener('click', () => syncNow(false));
 window.addEventListener('online', () => { updatePill(); autoSync(); });
 window.addEventListener('offline', updatePill);
+
+/* ---------- holidays and weekly off ---------- */
+const WD = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const dstr = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+function weekOff(){
+  const v = getSet('weekOff');
+  if (!v) return [0, 6];
+  if (v === 'none') return [];
+  return v.split(',').map(Number);
+}
+function dow(ds){ const p = ds.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]).getDay(); }
+function holMap(){ const m = new Map(); holidays.forEach(h => { if (h.active !== false) m.set(h.date, h); }); return m; }
+function dayInfo(ds){
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(ds || '')) return { off: false };
+  const rec = holMap().get(ds);
+  if (rec && rec.kind === 'off') return { off: true, reason: rec.reason || 'Holiday', rec };
+  if (rec && rec.kind === 'work') return { off: false, work: true, rec };
+  if (weekOff().includes(dow(ds))) return { off: true, reason: WD[dow(ds)] + ' is a weekly off' };
+  return { off: false };
+}
+function monthDays(month){
+  const y = +month.slice(0, 4), m = +month.slice(5, 7), n = new Date(y, m, 0).getDate();
+  const map = holMap(), wk = weekOff(), t = todayStr(), out = [];
+  for (let d = 1; d <= n; d++){
+    const ds = month + '-' + pad(d), rec = map.get(ds), w = new Date(y, m - 1, d).getDay();
+    let off = wk.includes(w);
+    if (rec) off = rec.kind === 'off';
+    out.push({ d, ds, dow: w, off, custom: !!(rec && rec.kind === 'off'), reason: (rec && rec.reason) || '', counted: !off && ds <= t });
+  }
+  return out;
+}
+async function saveHoliday(ds, kind, reason){
+  await put('holidays', { date: ds, kind, reason: reason || '', active: true, synced: 0, updated: Date.now() });
+  await load();
+}
+async function dropHoliday(ds){
+  const h = holidays.find(x => x.date === ds); if (!h) return;
+  await put('holidays', Object.assign({}, h, { active: false, synced: 0, updated: Date.now() }));
+  await load();
+}
+function refreshAfterHoliday(){
+  loadDraft(); renderAttendance(); renderHolidays(); renderReport(); renderSync(); updatePill(); autoSync();
+}
+function renderHolidays(){
+  const wk = weekOff();
+  $('#wkOff').innerHTML = WD.map((n, i) => '<label class="chk"><input type="checkbox" data-wd="' + i + '"' + (wk.includes(i) ? ' checked' : '') + '>' + n.slice(0, 3) + '</label>').join('');
+  const list = holidays.filter(h => h.active !== false).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 60);
+  $('#holList').innerHTML = list.length ? list.map(h =>
+    '<li class="stu"><div class="nm"><b>' + esc(h.date) + (h.kind === 'work' ? ' (working day)' : '') + '</b><small>' + esc(h.reason || (h.kind === 'work' ? 'Normally off' : 'Holiday')) + '</small></div>' +
+    '<div class="acts"><button type="button" class="danger" data-del="' + esc(h.date) + '">Remove</button></div></li>'
+  ).join('') : '<li class="empty">No extra holidays added yet.</li>';
+}
+$('#wkOff').addEventListener('change', () => {
+  const v = Array.from(document.querySelectorAll('#wkOff input:checked')).map(i => i.dataset.wd);
+  setSet('weekOff', v.length ? v.join(',') : 'none');
+  refreshAfterHoliday();
+});
+$('#holAdd').addEventListener('click', async () => {
+  const from = $('#holDate').value, to = $('#holTo').value || from, reason = $('#holReason').value.trim();
+  if (!from){ toast('Choose a date.'); return; }
+  if (to < from){ toast('The end date is before the start date.'); return; }
+  const recs = []; const d = new Date(from + 'T00:00:00'), end = new Date(to + 'T00:00:00');
+  while (d <= end && recs.length < 62){ recs.push({ date: dstr(d), kind: 'off', reason, active: true, synced: 0, updated: Date.now() }); d.setDate(d.getDate() + 1); }
+  await putMany('holidays', recs); await load();
+  $('#holTo').value = ''; $('#holReason').value = '';
+  refreshAfterHoliday();
+  toast(recs.length === 1 ? 'Holiday added.' : recs.length + ' holidays added.');
+});
+$('#holList').addEventListener('click', async e => {
+  const b = e.target.closest('button[data-del]'); if (!b) return;
+  await dropHoliday(b.dataset.del); refreshAfterHoliday(); toast('Removed.');
+});
+$('#attOff').addEventListener('click', async e => {
+  const b = e.target.closest('button[data-hol]'); if (!b) return;
+  const ds = $('#attDate').value; if (!ds) return;
+  if (b.dataset.hol === 'work') await saveHoliday(ds, 'work', ''); else await dropHoliday(ds);
+  refreshAfterHoliday();
+});
+$('#markHoliday').addEventListener('click', async () => {
+  const ds = $('#attDate').value; if (!ds){ toast('Choose a date first.'); return; }
+  const r = prompt('Reason for the holiday, for example: government holiday. You can leave this empty.');
+  if (r === null) return;
+  await saveHoliday(ds, 'off', r.trim());
+  refreshAfterHoliday(); toast('Marked as holiday.');
+});
+
+/* ---------- bulk import from Excel / CSV ---------- */
+const norm = s => String(s == null ? '' : s).trim().toLowerCase().replace(/\s+/g, ' ');
+const HEAD = {
+  name: ['name','studentname','fullname','student','childname'],
+  cls: ['class','grade','classname','classsection','standard','section'],
+  school: ['school','schoolname','branch','campus'],
+  guardian: ['guardian','fathername','father','parent','parentname','guardianname','fatherguardian','fatherguardianname'],
+  phone: ['phone','mobile','contact','phoneno','mobileno','contactno','phonenumber','mobilenumber','whatsapp'],
+  roll: ['roll','rollno','rollnumber','regno','registrationno','admissionno']
+};
+function parseCSV(text){
+  text = text.replace(/^\ufeff/, '');
+  const first = text.split(/\r?\n/, 1)[0] || '';
+  const delim = [',', ';', '\t'].map(d => [d, first.split(d).length]).sort((a, b) => b[1] - a[1])[0][0];
+  const rows = []; let row = [], cur = '', q = false;
+  for (let i = 0; i < text.length; i++){
+    const ch = text[i];
+    if (q){ if (ch === '"'){ if (text[i + 1] === '"'){ cur += '"'; i++; } else q = false; } else cur += ch; }
+    else if (ch === '"') q = true;
+    else if (ch === delim){ row.push(cur); cur = ''; }
+    else if (ch === '\n'){ row.push(cur); rows.push(row); row = []; cur = ''; }
+    else if (ch !== '\r') cur += ch;
+  }
+  if (cur !== '' || row.length){ row.push(cur); rows.push(row); }
+  return rows;
+}
+async function inflateRaw(u8){
+  const stream = new Blob([u8]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+  return new Uint8Array(await new Response(stream).arrayBuffer());
+}
+async function unzip(buf){
+  const u8 = new Uint8Array(buf), dv = new DataView(buf), files = {}, dec = new TextDecoder();
+  let e = u8.length - 22;
+  while (e >= 0 && dv.getUint32(e, true) !== 0x06054b50) e--;
+  if (e < 0) throw new Error('not a zip');
+  const n = dv.getUint16(e + 10, true); let p = dv.getUint32(e + 16, true);
+  for (let i = 0; i < n; i++){
+    if (dv.getUint32(p, true) !== 0x02014b50) break;
+    const method = dv.getUint16(p + 10, true), csize = dv.getUint32(p + 20, true);
+    const nl = dv.getUint16(p + 28, true), el = dv.getUint16(p + 30, true), cl = dv.getUint16(p + 32, true), lo = dv.getUint32(p + 42, true);
+    files[dec.decode(u8.subarray(p + 46, p + 46 + nl))] = { method, csize, lo };
+    p += 46 + nl + el + cl;
+  }
+  return {
+    names: Object.keys(files),
+    async read(name){
+      const f = files[name]; if (!f) return null;
+      const ds = f.lo + 30 + dv.getUint16(f.lo + 26, true) + dv.getUint16(f.lo + 28, true);
+      const data = u8.subarray(ds, ds + f.csize);
+      return dec.decode(f.method === 0 ? data : await inflateRaw(data));
+    }
+  };
+}
+async function readXlsx(buf){
+  const z = await unzip(buf);
+  const sheets = z.names.filter(n => /^xl\/worksheets\/sheet\d+\.xml$/.test(n)).sort((a, b) => parseInt(a.replace(/\D/g, ''), 10) - parseInt(b.replace(/\D/g, ''), 10));
+  if (!sheets.length) throw new Error('no sheet');
+  const parse = s => new DOMParser().parseFromString(s, 'application/xml');
+  const shared = [];
+  const ss = await z.read('xl/sharedStrings.xml');
+  if (ss) Array.from(parse(ss).getElementsByTagName('si')).forEach(si => {
+    shared.push(Array.from(si.getElementsByTagName('t')).filter(t => !t.closest('rPh')).map(t => t.textContent).join(''));
+  });
+  const doc = parse(await z.read(sheets[0]));
+  const rows = [];
+  Array.from(doc.getElementsByTagName('row')).forEach(rw => {
+    const ri = parseInt(rw.getAttribute('r'), 10) - 1, arr = [];
+    Array.from(rw.getElementsByTagName('c')).forEach(c => {
+      const letters = (c.getAttribute('r') || '').replace(/[0-9]/g, '');
+      let ci = 0; for (const ch of letters) ci = ci * 26 + ch.charCodeAt(0) - 64; ci--;
+      const t = c.getAttribute('t'), v = c.getElementsByTagName('v')[0];
+      let val = '';
+      if (t === 's') val = v ? (shared[parseInt(v.textContent, 10)] || '') : '';
+      else if (t === 'inlineStr') val = Array.from(c.getElementsByTagName('t')).map(x => x.textContent).join('');
+      else val = v ? v.textContent : '';
+      if (ci >= 0) arr[ci] = val;
+    });
+    rows[ri >= 0 ? ri : rows.length] = arr;
+  });
+  return Array.from(rows, r => r || []);
+}
+function mapRows(rows){
+  let hi = -1, map = {};
+  for (let i = 0; i < Math.min(rows.length, 10); i++){
+    const m = {};
+    rows[i].forEach((h, c) => {
+      const k = String(h == null ? '' : h).toLowerCase().replace(/[^a-z0-9]/g, '');
+      for (const f in HEAD) if (m[f] == null && HEAD[f].includes(k)) m[f] = c;
+    });
+    if (m.name != null && m.cls != null){ hi = i; map = m; break; }
+  }
+  if (hi < 0) return null;
+  const get = (r, f) => (map[f] == null || r[map[f]] == null) ? '' : String(r[map[f]]).trim();
+  const out = [];
+  for (let i = hi + 1; i < rows.length; i++){
+    const r = rows[i];
+    if (!r || r.every(v => String(v == null ? '' : v).trim() === '')) continue;
+    out.push({ name: get(r, 'name'), cls: get(r, 'cls'), school: get(r, 'school'), guardian: get(r, 'guardian'), phone: get(r, 'phone'), roll: get(r, 'roll') });
+  }
+  return out;
+}
+const skey = s => norm(s.school) + '|' + norm(s.cls) + '|' + (s.roll ? 'r:' + norm(s.roll) : 'n:' + norm(s.name) + '|' + norm(s.guardian));
+let bulk = null;
+function showBulk(fileName, items){
+  const defSchool = $('#bulkSchool').value.trim();
+  const existing = new Map(); students.forEach(s => existing.set(skey(s), s));
+  const seen = new Set(), good = []; let missing = 0, noSchool = 0, dup = 0;
+  items.forEach(it => {
+    if (!it.school) it.school = defSchool;
+    if (!it.name || !it.cls){ missing++; return; }
+    if (!it.school){ noSchool++; return; }
+    const k = skey(it);
+    if (seen.has(k)){ dup++; return; }
+    seen.add(k); it.existing = existing.get(k) || null; good.push(it);
+  });
+  bulk = { good };
+  const upd = good.filter(g => g.existing).length;
+  let h = '<div class="imp"><p><b>' + esc(fileName) + '</b></p><p>Rows read: ' + items.length + '</p>' +
+    '<p>New students: <b>' + (good.length - upd) + '</b></p>' +
+    '<p>Already registered (will be updated): <b>' + upd + '</b></p>';
+  if (missing) h += '<p style="color:var(--a)">Skipped, name or class missing: ' + missing + '</p>';
+  if (noSchool) h += '<p style="color:var(--a)">Skipped, no school: ' + noSchool + '. Type a school name above and choose the file again.</p>';
+  if (dup) h += '<p style="color:var(--a)">Skipped, repeated in the file: ' + dup + '</p>';
+  if (good.length){
+    h += '<div class="scroll"><table><thead><tr><th>Name</th><th>Class</th><th>School</th></tr></thead><tbody>' +
+      good.slice(0, 5).map(g => '<tr><td>' + esc(g.name) + '</td><td>' + esc(g.cls) + '</td><td>' + esc(g.school) + '</td></tr>').join('') +
+      '</tbody></table></div><p class="help">First ' + Math.min(5, good.length) + ' rows shown.</p>' +
+      '<div class="btns" style="margin-top:10px"><button class="primary" type="button" data-act="import">Import ' + good.length + '</button><button type="button" data-act="cancel">Cancel</button></div>';
+  } else {
+    h += '<p>Nothing to import.</p><button type="button" data-act="cancel">Close</button>';
+  }
+  $('#bulkPreview').innerHTML = h + '</div>';
+}
+$('#bulkPick').addEventListener('click', () => $('#bulkFile').click());
+$('#bulkTpl').addEventListener('click', () => csv('student-template.csv', [
+  ['Name', 'Class', 'School', 'Guardian', 'Phone', 'Roll No'],
+  ['Ali Khan', '5-A', 'Al-Noor School', 'Khan Sahib', '03001234567', '1'],
+  ['Sara Bibi', '5-A', 'Al-Noor School', 'Bibi Sahiba', '03007654321', '2']
+]));
+$('#bulkFile').addEventListener('change', async e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  try {
+    let rows;
+    if (/\.xlsx$/i.test(f.name)) rows = await readXlsx(await f.arrayBuffer());
+    else if (/\.(csv|txt)$/i.test(f.name)) rows = parseCSV(new TextDecoder('utf-8').decode(await f.arrayBuffer()));
+    else { toast('Choose an .xlsx or .csv file. For an old .xls file, save it as .xlsx first.'); return; }
+    const items = mapRows(rows);
+    if (!items){ toast('Could not find the Name and Class columns in the first rows.'); return; }
+    showBulk(f.name, items);
+  } catch(err){ toast('Could not read this file. Save it as .xlsx or .csv and try again.'); }
+});
+$('#bulkPreview').addEventListener('click', async e => {
+  const b = e.target.closest('button[data-act]'); if (!b) return;
+  if (b.dataset.act === 'cancel'){ bulk = null; $('#bulkPreview').innerHTML = ''; return; }
+  if (b.dataset.act !== 'import' || !bulk) return;
+  b.disabled = true; b.textContent = 'Importing...';
+  const used = new Set(students.map(s => s.id)), now = Date.now(), recs = [];
+  bulk.good.forEach(it => {
+    const ex = it.existing; let id;
+    if (ex) id = ex.id;
+    else { do { id = 'S' + Math.random().toString(36).toUpperCase().slice(2, 8); } while (used.has(id)); used.add(id); }
+    recs.push({
+      id, name: it.name, cls: it.cls, school: it.school,
+      guardian: it.guardian || (ex && ex.guardian) || '', phone: it.phone || (ex && ex.phone) || '', roll: it.roll || (ex && ex.roll) || '',
+      registered: ex ? ex.registered : todayStr(), active: true, synced: 0, updated: now
+    });
+  });
+  try { await putMany('students', recs); }
+  catch(err){ toast('Import failed, nothing was saved.'); b.disabled = false; b.textContent = 'Import ' + recs.length; return; }
+  bulk = null; $('#bulkPreview').innerHTML = '';
+  await load(); fillClassSelects(); renderStudents(); loadDraft(); renderAttendance(); updatePill();
+  toast(recs.length + ' students saved.');
+  autoSync();
+});
 
 /* ---------- school name and logo ---------- */
 function applySchool(){
@@ -483,7 +912,7 @@ function applySchool(){
   const img = $('#logo');
   if (logo){ img.src = logo; img.hidden = false; } else { img.hidden = true; img.removeAttribute('src'); }
 }
-$('#schoolSave').addEventListener('click', () => { setSet('schoolName', $('#cfgSchool').value.trim()); applySchool(); toast('School saved.'); });
+$('#schoolSave').addEventListener('click', () => { setSet('schoolName', $('#cfgSchool').value.trim()); applySchool(); toast('Name saved.'); });
 $('#cfgLogo').addEventListener('change', e => {
   const f = e.target.files[0]; if (!f) return;
   const img = new Image(), url = URL.createObjectURL(f);
@@ -510,14 +939,15 @@ window.addEventListener('appinstalled', () => { $('#installCard').hidden = true;
 if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => {});
 
 /* ---------- start ---------- */
-function renderAll(){ fillClassSelects(); renderAttendance(); renderStudents(); renderReport(); renderSync(); updatePill(); }
+function renderAll(){ fillClassSelects(); renderAttendance(); renderStudents(); renderReport(); renderHolidays(); renderSync(); updatePill(); }
 (async function init(){
   $('#today').textContent = new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   applySchool();
   if (navigator.storage && navigator.storage.persist) { navigator.storage.persist().catch(() => {}); }
   $('#attDate').value = todayStr();
+  $('#holDate').value = todayStr();
   $('#repMonth').value = todayStr().slice(0, 7);
-  try { await openDB(); await load(); }
+  try { await openDB(); await load(); await loadSettings(); applySchool(); }
   catch(e){ toast('This browser blocked local storage. Open the file in Chrome or Edge.'); return; }
   fillClassSelects(); loadDraft(); renderAll();
   autoSync();
