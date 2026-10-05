@@ -237,6 +237,11 @@ table.grid{border-collapse:separate;border-spacing:0;font-size:12px;width:auto;m
       <input id="impFile" type="file" accept="application/json,.json" hidden>
       <p class="help">CSV files open directly in Excel. Take a full backup now and then, because data lives in this browser.</p>
     </div>
+    <div class="card">
+      <h2>Delete data</h2>
+      <p class="help" style="margin:0 0 10px">Removes all students, attendance and holidays from this phone. Your Google Sheet is not changed, and the Sheet connection stays saved.</p>
+      <button id="wipeBtn" class="danger wide" type="button">Delete all data on this phone</button>
+    </div>
   </section>
 </main>
 
@@ -587,6 +592,19 @@ $('#impFile').addEventListener('change', async e => {
     await load(); fillClassSelects(); loadDraft(); renderAll(); toast('Backup restored.');
   } catch(err){ toast('This is not a valid backup file.'); }
   e.target.value = '';
+});
+
+/* ---------- delete all local data ---------- */
+$('#wipeBtn').addEventListener('click', async () => {
+  if (!students.length && !attendance.length && !holidays.length){ toast('There is no data to delete.'); return; }
+  if (!confirm('Delete ALL students, attendance and holidays from this phone? This cannot be undone. Your Google Sheet is not touched. Take a Full backup first if you may need this data.')) return;
+  const word = prompt('Type DELETE to confirm.');
+  if (word === null || word.trim().toUpperCase() !== 'DELETE'){ toast('Cancelled. Nothing was deleted.'); return; }
+  try { for (const n of ['students', 'attendance', 'holidays']) await wrap(store(n, 'readwrite').clear()); }
+  catch(err){ toast('Could not delete the data.'); return; }
+  draft = {}; editingId = null; stuPage = 0; bulk = null; $('#bulkPreview').innerHTML = '';
+  await load(); fillClassSelects(); loadDraft(); renderAll();
+  toast('All data deleted from this phone.');
 });
 
 /* ---------- sync ---------- */
