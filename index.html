@@ -124,7 +124,10 @@ table.grid{border-collapse:separate;border-spacing:0;font-size:12px;width:auto;m
     <div id="attMain">
       <div class="bar"><span id="attSummary"></span><button id="allPresent" class="ghost" type="button">Mark all present</button></div>
       <div class="card"><ul id="attList"></ul></div>
-      <button id="saveAtt" class="primary wide" type="button">Save attendance</button>
+      <div class="btns">
+        <button id="saveAtt" type="button">Save</button>
+        <button id="saveNext" class="primary" type="button">Save and next class</button>
+      </div>
       <button id="markHoliday" class="ghost wide" type="button" style="margin-top:8px">Mark this day as holiday</button>
     </div>
   </section>
@@ -213,7 +216,7 @@ table.grid{border-collapse:separate;border-spacing:0;font-size:12px;width:auto;m
       <div class="stat"><span>Last sync</span><b id="lastSync">Never</b></div>
       <div style="height:10px"></div>
       <button id="syncNow" class="primary wide" type="button">Sync now</button>
-      <p class="help">Everything is saved on this device first. Sync sends it to your Google Sheet whenever internet is available.</p>
+      <p class="help">Everything is saved on this device first. When internet is available, Sync sends your changes to the Google Sheet and brings back the latest data from it. This also runs when you open the app.</p>
     </div>
     <div class="card" id="installCard" hidden>
       <h2>Install on this phone</h2>
@@ -239,7 +242,7 @@ table.grid{border-collapse:separate;border-spacing:0;font-size:12px;width:auto;m
     </div>
     <div class="card">
       <h2>Delete data</h2>
-      <p class="help" style="margin:0 0 10px">Removes all students, attendance and holidays from this phone. Your Google Sheet is not changed, and the Sheet connection stays saved.</p>
+      <p class="help" style="margin:0 0 10px">Removes all students, attendance and holidays from this phone. Your Google Sheet is not changed, so if it still has data, that data comes back at the next sync. To start fresh, also delete the rows in the Sheet (keep the first row). The Sheet connection stays saved.</p>
       <button id="wipeBtn" class="danger wide" type="button">Delete all data on this phone</button>
     </div>
   </section>
@@ -327,8 +330,19 @@ function putMany(name, arr){
   });
 }
 
+function delMany(name, keys){
+  return new Promise((res, rej) => {
+    const t = db.transaction(name, 'readwrite'), st = t.objectStore(name);
+    keys.forEach(k => st.delete(k));
+    t.oncomplete = () => res();
+    t.onerror = () => rej(t.error);
+    t.onabort = () => rej(t.error);
+  });
+}
+
 /* ---------- state ---------- */
 let students = [], attendance = [], holidays = [], draft = {}, editingId = null;
+let dirty = false;
 
 async function load(){
   students = await getAll('students');
@@ -380,7 +394,7 @@ function fillClassSelects(){
 
 /* ---------- attendance ---------- */
 function loadDraft(){
-  draft = {};
+  draft = {}; dirty = false;
   const date = $('#attDate').value, cls = $('#attClass').value;
   attendance.forEach(a => { if (a.date === date && a.cls === cls) draft[a.studentId] = a.status; });
 }
@@ -418,6 +432,7 @@ $('#attList').addEventListener('click', e => {
   const b = e.target.closest('button[data-id]'); if (!b) return;
   const id = b.dataset.id, s = b.dataset.s;
   if (draft[id] === s) delete draft[id]; else draft[id] = s;
+  dirty = true;
   renderAttendance();
 });
 $('#attDate').addEventListener('change', () => { loadDraft(); renderAttendance(); });
@@ -425,27 +440,33 @@ $('#attClass').addEventListener('change', () => { loadDraft(); renderAttendance(
 $('#allPresent').addEventListener('click', () => {
   const cls = $('#attClass').value;
   currentList().forEach(s => { draft[s.id] = 'P'; });
+  dirty = true;
   renderAttendance();
 });
-$('#saveAtt').addEventListener('click', async () => {
+async function saveAttendance(advance){
   const date = $('#attDate').value, cls = $('#attClass').value;
   if (!date || !cls){ toast('Choose a date and a class first.'); return; }
   if (dayInfo(date).off){ toast('This day is a holiday. Attendance is not taken.'); return; }
-  const list = currentList();
-  let saved = 0;
-  for (const s of list){
-    const st = draft[s.id]; if (!st) continue;
-    await put('attendance', { key: date + '|' + cls + '|' + s.id, date, cls, studentId: s.id, name: s.name, status: st, synced: 0, updated: Date.now() });
-    saved++;
-  }
+  const list = currentList(), recs = [];
+  list.forEach(s => {
+    const st = draft[s.id]; if (!st) return;
+    recs.push({ key: date + '|' + cls + '|' + s.id, date, cls, studentId: s.id, name: s.name, status: st, synced: 0, updated: Date.now() });
+  });
+  if (recs.length) await putMany('attendance', recs);
   await load(); updatePill();
-  const un = list.length - saved;
-  const cl = classes(), ci = cl.indexOf(cls), next = (ci >= 0 && ci < cl.length - 1) ? cl[ci + 1] : null;
-  if (next) $('#attClass').value = next;
-  loadDraft(); renderAttendance(); window.scrollTo(0, 0);
-  toast('Saved ' + saved + ' of ' + list.length + (un ? ' (' + un + ' not marked)' : '') + '. ' + (next ? 'Next class: ' + next : 'This was the last class.'));
-  autoSync();
-});
+  const un = list.length - recs.length;
+  let msg = 'Saved ' + recs.length + ' of ' + list.length + (un ? ' (' + un + ' not marked)' : '') + '.';
+  if (advance){
+    const cl = classes(), ci = cl.indexOf(cls), next = (ci >= 0 && ci < cl.length - 1) ? cl[ci + 1] : null;
+    if (next) $('#attClass').value = next;
+    msg += ' ' + (next ? 'Next class: ' + next : 'This was the last class.');
+    window.scrollTo(0, 0);
+  }
+  loadDraft(); renderAttendance();
+  toast(msg); autoSync();
+}
+$('#saveAtt').addEventListener('click', () => saveAttendance(false));
+$('#saveNext').addEventListener('click', () => saveAttendance(true));
 
 /* ---------- students ---------- */
 const PAGE = 20; let stuPage = 0;
@@ -597,7 +618,7 @@ $('#impFile').addEventListener('change', async e => {
 /* ---------- delete all local data ---------- */
 $('#wipeBtn').addEventListener('click', async () => {
   if (!students.length && !attendance.length && !holidays.length){ toast('There is no data to delete.'); return; }
-  if (!confirm('Delete ALL students, attendance and holidays from this phone? This cannot be undone. Your Google Sheet is not touched. Take a Full backup first if you may need this data.')) return;
+  if (!confirm('Delete ALL students, attendance and holidays from this phone? This cannot be undone. Your Google Sheet is not touched, so its data will come back at the next sync. Take a Full backup first if you may need this data.')) return;
   const word = prompt('Type DELETE to confirm.');
   if (word === null || word.trim().toUpperCase() !== 'DELETE'){ toast('Cancelled. Nothing was deleted.'); return; }
   try { for (const n of ['students', 'attendance', 'holidays']) await wrap(store(n, 'readwrite').clear()); }
@@ -625,44 +646,97 @@ async function send(url, body){
   if (!j.ok) throw new Error(j.error || 'Sync failed');
   return j;
 }
-async function syncNow(silent){
+async function pushAll(url, silent){
+  const st = students.filter(x => !x.synced), at = attendance.filter(x => !x.synced), ho = holidays.filter(x => !x.synced);
+  const total = st.length + at.length + ho.length;
+  if (!total) return 0;
+  const CH = 300; let done = 0;
+  if (ho.length){
+    await send(url, { students: [], attendance: [], holidays: ho });
+    await putMany('holidays', ho.map(h => Object.assign({}, h, { synced: 1 })));
+    done += ho.length;
+  }
+  for (let i = 0; i < st.length; i += CH){
+    const part = st.slice(i, i + CH);
+    await send(url, { students: part, attendance: [] });
+    await putMany('students', part.map(x => Object.assign({}, x, { synced: 1 })));
+    done += part.length; if (!silent) toast('Sending ' + done + ' of ' + total + '...');
+  }
+  for (let i = 0; i < at.length; i += CH){
+    const part = at.slice(i, i + CH);
+    await send(url, { students: [], attendance: part });
+    await putMany('attendance', part.map(x => Object.assign({}, x, { synced: 1 })));
+    done += part.length; if (!silent) toast('Sending ' + done + ' of ' + total + '...');
+  }
+  return total;
+}
+async function pullAll(url){
+  const j = await send(url, { action: 'pull' });
+  const S = j.students || [], A = j.attendance || [], H = j.holidays || [];
+  const localSynced = students.filter(x => x.synced).length + attendance.filter(x => x.synced).length + holidays.filter(x => x.synced).length;
+  let removeMissing = true;
+  if (!S.length && !A.length && !H.length && localSynced > 0){
+    removeMissing = confirm('The Google Sheet has no data. OK = also clear the saved data in this app. Cancel = keep the data here and upload it to the Sheet again.');
+    if (!removeMissing){
+      await putMany('students', students.filter(x => x.synced).map(x => Object.assign({}, x, { synced: 0 })));
+      await putMany('attendance', attendance.filter(x => x.synced).map(x => Object.assign({}, x, { synced: 0 })));
+      await putMany('holidays', holidays.filter(x => x.synced).map(x => Object.assign({}, x, { synced: 0 })));
+      return { added: 0, changed: 0, removed: 0, reupload: true };
+    }
+  }
+  const st = { added: 0, changed: 0, removed: 0 };
+  const eq = (a, b, fields) => fields.every(k => String(a[k] == null ? '' : a[k]) === String(b[k] == null ? '' : b[k]));
+  async function merge(name, local, remote, keyOf, fields){
+    const lm = new Map(local.map(x => [keyOf(x), x])), rk = new Set(), keep = [], del = [];
+    remote.forEach(r => {
+      const k = keyOf(r); rk.add(k); r.synced = 1;
+      const l = lm.get(k);
+      if (!l){ keep.push(r); st.added++; }
+      else if (!l.synced){ if ((r.updated || 0) > (l.updated || 0)){ keep.push(r); st.changed++; } }
+      else if (!eq(l, r, fields)){ keep.push(r); st.changed++; }
+    });
+    if (removeMissing) local.forEach(l => { if (l.synced && !rk.has(keyOf(l))){ del.push(keyOf(l)); st.removed++; } });
+    if (keep.length) await putMany(name, keep);
+    if (del.length) await delMany(name, del);
+  }
+  await merge('students', students, S, x => x.id, ['id', 'name', 'guardian', 'cls', 'phone', 'roll', 'registered', 'active', 'school', 'gender']);
+  await merge('attendance', attendance, A, x => x.key, ['key', 'date', 'cls', 'studentId', 'status']);
+  await merge('holidays', holidays, H, x => x.date, ['date', 'kind', 'reason', 'active']);
+  return st;
+}
+async function syncNow(silent, pull){
   if (syncing) return;
   const url = getSet('cfgUrl');
   if (!url){ if (!silent){ toast('Add your Web App URL first.'); } return; }
   if (!navigator.onLine){ if (!silent) toast('No internet. Your data is safe on this device.'); return; }
-  const st = students.filter(s => !s.synced), at = attendance.filter(a => !a.synced), ho = holidays.filter(h => !h.synced);
-  if (!st.length && !at.length && !ho.length){ if (!silent) toast('Everything is already synced.'); return; }
   syncing = true;
-  const CH = 300, total = st.length + at.length + ho.length; let done = 0;
+  if (!silent) toast('Syncing...');
   try {
-    if (ho.length){
-      await send(url, { students: [], attendance: [], holidays: ho });
-      await putMany('holidays', ho.map(h => Object.assign({}, h, { synced: 1 })));
-      done += ho.length;
-    }
-    for (let i = 0; i < st.length; i += CH){
-      const part = st.slice(i, i + CH);
-      await send(url, { students: part, attendance: [] });
-      await putMany('students', part.map(s => Object.assign({}, s, { synced: 1 })));
-      done += part.length; if (!silent) toast('Syncing ' + done + ' of ' + total + '...');
-    }
-    for (let i = 0; i < at.length; i += CH){
-      const part = at.slice(i, i + CH);
-      await send(url, { students: [], attendance: part });
-      await putMany('attendance', part.map(a => Object.assign({}, a, { synced: 1 })));
-      done += part.length; if (!silent) toast('Syncing ' + done + ' of ' + total + '...');
+    let pushed = await pushAll(url, silent), info = null;
+    if (pull){
+      await load();
+      info = await pullAll(url);
+      if (info.reupload){ await load(); pushed += await pushAll(url, true); }
     }
     setSet('lastSync', String(Date.now()));
-    await load(); updatePill(); renderSync();
-    toast('Synced ' + st.length + ' students, ' + at.length + ' attendance records and ' + ho.length + ' holidays.');
+    await load();
+    if (!dirty) loadDraft();
+    fillClassSelects(); renderAll(); updatePill();
+    const parts = [];
+    if (pushed) parts.push('Sent ' + pushed + ' records to the Sheet');
+    if (info && info.reupload) parts.push('The Sheet was empty, so your data was uploaded again');
+    if (info && (info.added || info.changed || info.removed)) parts.push('From the Sheet: ' + info.added + ' new, ' + info.changed + ' changed, ' + info.removed + ' removed');
+    if (parts.length) toast(parts.join('. ') + '.');
+    else if (!silent) toast('Everything is up to date.');
   } catch(err){
-    await load(); updatePill(); renderSync();
+    try { await load(); updatePill(); renderSync(); } catch(e){}
     if (!silent) toast('Sync failed: ' + (err.message || 'check the URL and passcode') + '. What was sent is already saved.');
   } finally { syncing = false; }
 }
-function autoSync(){ if (navigator.onLine && getSet('cfgUrl')) syncNow(true); }
-$('#syncNow').addEventListener('click', () => syncNow(false));
-window.addEventListener('online', () => { updatePill(); autoSync(); });
+function autoSync(){ if (navigator.onLine && getSet('cfgUrl')) syncNow(true, false); }
+function startSync(){ if (navigator.onLine && getSet('cfgUrl')) syncNow(true, true); }
+$('#syncNow').addEventListener('click', () => syncNow(false, true));
+window.addEventListener('online', () => { updatePill(); startSync(); });
 window.addEventListener('offline', updatePill);
 
 /* ---------- holidays and weekly off ---------- */
@@ -944,7 +1018,7 @@ function renderAll(){ fillClassSelects(); renderAttendance(); renderStudents(); 
   try { await openDB(); await load(); await loadSettings(); }
   catch(e){ toast('This browser blocked local storage. Open the file in Chrome or Edge.'); return; }
   fillClassSelects(); loadDraft(); renderAll();
-  autoSync();
+  startSync();
 })();
 })();
 </script>
